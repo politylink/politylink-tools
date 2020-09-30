@@ -1,50 +1,61 @@
 import json
-import urllib
+import logging
+
 import requests
-import re
-import sys
-from datetime import datetime as dt
-from politylink.elasticsearch.client import ElasticsearchClient
-from politylink.graphql.client import GraphQLClient as PLGraphQLClient
+from politylink.elasticsearch.client import ElasticsearchClient, ElasticsearchClientException
+from politylink.graphql.client import GraphQLClient
+from tqdm import tqdm
 
-if len(sys.argv)<=1:
-  print("Error: domain is not specified.")
-  exit
+LOGGER = logging.getLogger(__name__)
+MINUTES_HANDLER = 'https://sharpspock.herokuapp.com/minutes'
 
-domain = sys.argv[1]
-minutes_handler = sys.argv[2]
-es_client = ElasticsearchClient()
-pl_client = PLGraphQLClient()
 
-def fetch_news():
-  filter=""
-  gql = '''
-    query{{
-      News{{
-        title,publishedAt{{year,month,day,hour,minute}}, id, domain
-      }}
-    }}
-  '''.format(a=filter)
-  result = pl_client.exec(gql)
-  return result["data"]["News"]
+def fetch_all_news(gql_client):
+    query = """
+    {
+        News {
+            id
+            title
+            publishedAt{ year, month, day, hour, minute }
+        }
+    }
+    """
+    res = gql_client.exec(query)
+    return res["data"]["News"]
 
-def match_minutes(text, date):
-  json_data=json.dumps({"text": text, "date": date}, ensure_ascii=False)
-  r = requests.post(minutes_handler, data=json_data.encode("utf-8"), headers={'Content-Type': 'application/json'})
-  return r.json()
 
-count = 0
-
-for news in fetch_news():
-    if not domain in news["domain"]:
-      continue
-    res = es_client.get(news["id"])
+def fetch_matched_minutes(news, news_text):
+    text = " ".join([news_text.title, news_text.body])
     date = news["publishedAt"]
-    time = "{}/{}/{} {}:{}".format(date["year"], date["month"], date["day"], date["hour"], date["minute"])
-    minutes = match_minutes("、".join([res.title, res.body]), time)
-    for minute in minutes['minutes']:
-      count += 1
-      print(news, minute)  
-      res2 = pl_client.exec_merge_news_referred_minutes(news["id"], minute["id"])
-      print(res2)
-print("{} references are annotated.".format(count))
+    date_str = "{}/{}/{} {}:{}".format(date["year"], date["month"], date["day"], date["hour"], date["minute"])
+    json_data = json.dumps({"text": text, "date": date_str}, ensure_ascii=False)
+    res = requests.post(MINUTES_HANDLER,
+                        data=json_data.encode("utf-8"),
+                        headers={'Content-Type': 'application/json'})
+    return res.json()['minutes']
+
+
+def main():
+    gql_client = GraphQLClient()
+    es_client = ElasticsearchClient()
+
+    news_list = fetch_all_news(gql_client)
+    LOGGER.info(f'fetched {len(news_list)} news from GraphQL')
+
+    for news in tqdm(news_list):
+        try:
+            news_text = es_client.get(news['id'])
+        except ElasticsearchClientException as e:
+            LOGGER.warning(e)
+            continue
+        minutes_list = fetch_matched_minutes(news, news_text)
+        if minutes_list:
+            LOGGER.info(f'found {len(minutes_list)} minutes for {news["id"]}')
+            for minutes in minutes_list:
+                gql_client.exec_merge_news_referred_minutes(news["id"], minutes["id"])
+
+
+if __name__ == '__main__':
+    logging.basicConfig(level=logging.INFO)
+    logging.getLogger('elasticsearch').setLevel(logging.WARNING)
+    main()

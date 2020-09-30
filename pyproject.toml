@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "politylink-tool"
+name = "politylink-tools"
 version = "0.1.0"
 description = ""
 authors = ["Your Name <you@example.com>"]
@@ -8,6 +8,7 @@ authors = ["Your Name <you@example.com>"]
 python = "^3.8"
 politylink = "^0.1.28"
 requests = "^2.24.0"
+tqdm = "^4.50.0"
 
 [tool.poetry.dev-dependencies]
 
