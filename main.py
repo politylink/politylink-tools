@@ -8,6 +8,7 @@ from tqdm import tqdm
 
 LOGGER = logging.getLogger(__name__)
 MINUTES_HANDLER = 'https://sharpspock.herokuapp.com/minutes'
+BILLS_HANDLER = 'https://sharpspock.herokuapp.com/bills'
 
 
 def fetch_all_news(gql_client):
@@ -34,6 +35,15 @@ def fetch_matched_minutes(news, news_text):
                         headers={'Content-Type': 'application/json'})
     return res.json()['minutes']
 
+def fetch_matched_bills(news, news_text):
+    text = " ".join([news_text.title, news_text.body])
+    date = news["publishedAt"]
+    date_str = "{}/{}/{} {}:{}".format(date["year"], date["month"], date["day"], date["hour"], date["minute"])
+    json_data = json.dumps({"text": text, "date": date_str}, ensure_ascii=False)
+    res = requests.post(BILLS_HANDLER,
+                        data=json_data.encode("utf-8"),
+                        headers={'Content-Type': 'application/json'})
+    return res.json()['bills']
 
 def main():
     gql_client = GraphQLClient()
@@ -53,6 +63,11 @@ def main():
             LOGGER.info(f'found {len(minutes_list)} minutes for {news["id"]}')
             for minutes in minutes_list:
                 gql_client.exec_merge_news_referred_minutes(news["id"], minutes["id"])
+        bills_list = fetch_matched_bills(news, news_text)
+        if bills_list:
+            LOGGER.info(f'found {len(bills_list)} bills for {news["id"]}')
+            for bill in bills_list:
+                gql_client.exec_merge_news_referred_bills(news["id"], bill["id"])
 
 
 if __name__ == '__main__':
