@@ -49,7 +49,6 @@ def main():
     date2bill = build_date_dict(bill_list, BILL_DATE_FIELDS)
     date2minutes = build_date_dict(minutes_list, MINUTES_DATE_FIELD)
     date2news = build_date_dict(news_list, NEWS_DATE_FIELD)
-    LOGGER.info(len(date2bill))
 
     dates = [args.start_date + timedelta(i) for i in range((args.end_date - args.start_date).days)]
     for date in tqdm(dates):
