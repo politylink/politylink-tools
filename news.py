@@ -52,6 +52,7 @@ def main():
 
     stats = defaultdict(int)
     for news in tqdm(news_list):
+        LOGGER.info(f'process {news.id}')
         stats['process'] += 1
         try:
             news_text = es_client.get(news.id)
