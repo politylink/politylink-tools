@@ -56,7 +56,7 @@ def build_tv_url(href):
 
 def main(fp):
     df = pd.read_csv(fp)
-    LOGGER.info(f'loaded {fp}')
+    LOGGER.info(f'loaded {len(df)} records from {fp}')
 
     # fill meeting number
     meeting_number_list = []
@@ -96,9 +96,10 @@ def main(fp):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Minutesを登録する')
+    parser = argparse.ArgumentParser(description='Minutesを手動で登録する')
     parser.add_argument('-f', '--file', default='./data/minutes.csv')
     parser.add_argument('-v', '--verbose', action='store_true')
     args = parser.parse_args()
     logging.basicConfig(level=logging.DEBUG if args.verbose else logging.INFO)
+    logging.getLogger('sgqlc').setLevel(logging.INFO)
     main(args.file)
