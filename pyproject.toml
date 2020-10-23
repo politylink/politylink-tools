@@ -9,6 +9,8 @@ python = "^3.8"
 politylink = "^0.1.28"
 requests = "^2.24.0"
 tqdm = "^4.50.0"
+# needed to add scrapy for politylink-crawler because poetry env switching did not work with subprocess
+scrapy = "2.2.1"
 
 [tool.poetry.dev-dependencies]
 jupyterlab = "^2.2.8"

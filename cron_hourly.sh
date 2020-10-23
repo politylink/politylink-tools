@@ -1,6 +1,7 @@
-#!/bin/bash
+#!/bin/bash --login
 
-# 0 0 * * * ~/politylink/politylink-tools/cron_hourly.sh &> ~/politylink/politylink-tools/log/cron_hourly.log
+# crontab -e
+# 0 * * * * ~/politylink/politylink-tools/cron_hourly.sh &> ~/politylink/politylink-tools/log/cron_hourly.log
 
 set -ue
 

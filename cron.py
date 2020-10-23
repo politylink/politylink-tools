@@ -18,6 +18,9 @@ YESTERDAY = TODAY - timedelta(1)
 SEVEN_DAYS_AGO = TODAY - timedelta(7)
 DATE_FORMAT = '%Y-%m-%d'
 
+LOG_DATE_FORMAT = "%Y-%m-%d %I:%M:%S"
+LOG_FORMAT = '%(asctime)s [%(name)s] %(levelname)s: %(message)s'
+
 
 class BashTask:
     def __init__(self, cmd, cwd=None, log_fp=None):
@@ -41,6 +44,12 @@ DAILY_TASKS = [
     BashTask('poetry run scrapy crawl minutes -a start_date={} -a end_date={} -a speech=false'.format(
         SEVEN_DAYS_AGO.strftime(DATE_FORMAT), TODAY.strftime(DATE_FORMAT)),
         CRAWLER_ROOT, 'crawl_minutes.log'),
+    BashTask('poetry run python news.py --start_date {} --end_date {}'.format(
+        SEVEN_DAYS_AGO.strftime(DATE_FRMAT), TODAY.strftime(DATE_FORMAT)),
+        TOOLS_ROOT, 'process_news_daily.log'),
+    BashTask('poetry run python timeline.py --start_date {} --end_date {}'.format(
+        SEVEN_DAYS_AGO.strftime(DATE_FORMAT), TODAY.strftime(DATE_FORMAT)),
+        TOOLS_ROOT, 'process_timeline_daily.log'),
 ]
 
 HOURLY_TASKS = [
@@ -74,10 +83,11 @@ class Mode(Enum):
 
 def main(mode):
     for task in mode.tasks():
-        LOGGER.info(f'run {task.cmd}')
+        LOGGER.info(f'{task.cmd} @ {task.cwd}')
         try:
             result = task.run()
             if result.returncode != 0:
+                LOGGER.warning(result)
                 LOGGER.warning(
                     f'received non-zero returncode={result.returncode}. check {task.log_fp} for the details.')
         except Exception:
@@ -89,5 +99,5 @@ if __name__ == '__main__':
     parser.add_argument('-m', '--mode', type=Mode, choices=list(Mode), required=True)
     parser.add_argument('-v', '--verbose', action='store_true')
     args = parser.parse_args()
-    logging.basicConfig(level=logging.DEBUG if args.verbose else logging.INFO)
+    logging.basicConfig(level=logging.DEBUG if args.verbose else logging.INFO, datefmt=LOG_DATE_FORMAT, format=LOG_FORMAT)
     main(args.mode)

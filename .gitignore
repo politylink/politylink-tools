@@ -3,3 +3,5 @@
 poetry.lock
 *.ipynb
 .ipynb_checkpoints
+__pycache__/
+log/
