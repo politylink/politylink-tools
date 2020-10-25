@@ -61,8 +61,6 @@ HOURLY_LOG_ROOT = LOG_ROOT / 'hourly'
 HOURLY_TASKS = [
     BashTask('poetry run scrapy crawl reuters -a limit=50',
              CRAWLER_ROOT, HOURLY_LOG_ROOT / 'crawl_reuters.log'),
-    BashTask('poetry run scrapy crawl reuters_kyodo -a limit=50',
-             CRAWLER_ROOT, HOURLY_LOG_ROOT / 'crawl_reuters_kyodo.log'),
     BashTask('poetry run scrapy crawl nikkei -a limit=50',
              CRAWLER_ROOT, HOURLY_LOG_ROOT / 'crawl_nikkei.log'),
     BashTask('poetry run scrapy crawl mainichi -a limit=50',
