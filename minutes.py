@@ -73,14 +73,16 @@ def main(fp):
     for _, row in df.iterrows():
         minutes = build_minutes(row['diet_number'], row['house_name'], row['meeting_name'], row['meeting_number'],
                                 row['year'], row['month'], row['day'])
-        objects.append(minutes)
 
-        # link to committee
         committees = committee_finder.find(minutes.name)
         if len(committees) != 1:
-            raise ValueError(f'found none/multiple committees for {minutes.name}')
+            LOGGER.warning(f'found {len(committees)} committees for {minutes.name}, skipping')
+            continue
+        committee = committees[0]
+
+        objects.append(minutes)
         from_ids.append(minutes.id)
-        to_ids.append(committees[0].id)
+        to_ids.append(committee.id)
 
         # link to tv url if exists
         if row['tv']:
