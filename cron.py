@@ -75,7 +75,7 @@ HOURLY_TASKS = [
     BashTask('poetry run python timeline.py --start_date {} --end_date {}'.format(
         TODAY.strftime(DATE_FORMAT), TOMMOROW.strftime(DATE_FORMAT)),
         TOOLS_ROOT, HOURLY_LOG_ROOT / 'process_timeline.log'),
-    BashTask('gatsby clean && gatsby build',
+    BashTask('gatsby build',
              GATSBY_ROOT, HOURLY_LOG_ROOT / 'gatsby.log'),
 ]
 
