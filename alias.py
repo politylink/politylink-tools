@@ -27,8 +27,8 @@ def main(fp):
             LOGGER.warning(f'found {len(bills)} Bills for {row["billNumber"]}')
             continue
         bill = bills[0]
-        bill.aliases = list(filter(lambda x: row[x], alias_columns))
-        bill.tags = list(filter(lambda x: row[x], tag_columns))
+        bill.aliases = list(filter(lambda x: x, map(lambda x: row[x], alias_columns)))
+        bill.tags = list(filter(lambda x: x, map(lambda x: row[x], tag_columns)))
         objects.append(bill)
     client.bulk_merge(objects)
     LOGGER.info(f'merged {len(objects)} bills')
