@@ -65,6 +65,10 @@ HOURLY_TASKS = [
              CRAWLER_ROOT, HOURLY_LOG_ROOT / 'crawl_nikkei.log'),
     BashTask('poetry run scrapy crawl mainichi -a limit=50',
              CRAWLER_ROOT, HOURLY_LOG_ROOT / 'crawl_mainichi.log'),
+    BashTask('poetry run scrapy crawl shugiin_tv',
+             CRAWLER_ROOT, HOURLY_LOG_ROOT / 'crawl_shugiin_tv.log'),
+    BashTask('poetry run scrapy crawl sangiin_tv',
+             CRAWLER_ROOT, HOURLY_LOG_ROOT / 'crawl_sangiin_tv.log'),
     BashTask('poetry run python news.py --start_date {} --end_date {}'.format(
         TODAY.strftime(DATE_FORMAT), TOMMOROW.strftime(DATE_FORMAT)),
         TOOLS_ROOT, HOURLY_LOG_ROOT / 'process_news.log'),
