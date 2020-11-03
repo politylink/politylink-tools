@@ -14,7 +14,8 @@ TOOLS_ROOT = POLITYLINK_ROOT / 'politylink-tools'
 LOG_ROOT = TOOLS_ROOT / 'log'
 
 TODAY = datetime.now().date()
-TOMMOROW = TODAY + timedelta(1)
+TOMORROW = TODAY + timedelta(1)
+DAY_AFTER_TOMORROW = TODAY + timedelta(2)
 SEVEN_DAYS_AGO = TODAY - timedelta(7)
 DATE_FORMAT = '%Y-%m-%d'
 
@@ -47,13 +48,13 @@ DAILY_TASKS = [
     BashTask('poetry run scrapy crawl sangiin_committee',
              CRAWLER_ROOT, DAILY_LOG_ROOT / 'crawl_sangiin_committee.log'),
     BashTask('poetry run scrapy crawl minutes -a start_date={} -a end_date={} -a speech=false'.format(
-        SEVEN_DAYS_AGO.strftime(DATE_FORMAT), TOMMOROW.strftime(DATE_FORMAT)),
+        SEVEN_DAYS_AGO.strftime(DATE_FORMAT), TOMORROW.strftime(DATE_FORMAT)),
         CRAWLER_ROOT, DAILY_LOG_ROOT / 'crawl_minutes.log'),
     BashTask('poetry run python news.py --start_date {} --end_date {}'.format(
-        SEVEN_DAYS_AGO.strftime(DATE_FORMAT), TOMMOROW.strftime(DATE_FORMAT)),
+        SEVEN_DAYS_AGO.strftime(DATE_FORMAT), TOMORROW.strftime(DATE_FORMAT)),
         TOOLS_ROOT, DAILY_LOG_ROOT / 'process_news.log'),
     BashTask('poetry run python timeline.py --start_date {} --end_date {}'.format(
-        SEVEN_DAYS_AGO.strftime(DATE_FORMAT), TOMMOROW.strftime(DATE_FORMAT)),
+        SEVEN_DAYS_AGO.strftime(DATE_FORMAT), DAY_AFTER_TOMORROW.strftime(DATE_FORMAT)),
         TOOLS_ROOT, DAILY_LOG_ROOT / 'process_timeline.log'),
 ]
 
@@ -70,10 +71,10 @@ HOURLY_TASKS = [
     BashTask('poetry run scrapy crawl sangiin_tv',
              CRAWLER_ROOT, HOURLY_LOG_ROOT / 'crawl_sangiin_tv.log'),
     BashTask('poetry run python news.py --start_date {} --end_date {}'.format(
-        TODAY.strftime(DATE_FORMAT), TOMMOROW.strftime(DATE_FORMAT)),
+        TODAY.strftime(DATE_FORMAT), TOMORROW.strftime(DATE_FORMAT)),
         TOOLS_ROOT, HOURLY_LOG_ROOT / 'process_news.log'),
     BashTask('poetry run python timeline.py --start_date {} --end_date {}'.format(
-        TODAY.strftime(DATE_FORMAT), TOMMOROW.strftime(DATE_FORMAT)),
+        TODAY.strftime(DATE_FORMAT), DAY_AFTER_TOMORROW.strftime(DATE_FORMAT)),
         TOOLS_ROOT, HOURLY_LOG_ROOT / 'process_timeline.log'),
     BashTask('gatsby build',
              GATSBY_ROOT, HOURLY_LOG_ROOT / 'gatsby.log'),
