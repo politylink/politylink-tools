@@ -46,6 +46,10 @@ DAILY_TASKS = [
              CRAWLER_ROOT, DAILY_LOG_ROOT / 'crawl_shugiin_committee.log'),
     BashTask('poetry run scrapy crawl sangiin_committee',
              CRAWLER_ROOT, DAILY_LOG_ROOT / 'crawl_sangiin_committee.log'),
+    BashTask('poetry run scrapy crawl shugiin_minutes',
+             CRAWLER_ROOT, DAILY_LOG_ROOT / 'crawl_shugiin_minutes.log'),
+    BashTask('poetry run scrapy crawl sangiin_minutes',
+             CRAWLER_ROOT, DAILY_LOG_ROOT / 'crawl_sangiin_minutes.log'),
     BashTask('poetry run scrapy crawl minutes -a start_date={} -a end_date={} -a speech=false'.format(
         SEVEN_DAYS_AGO.strftime(DATE_FORMAT), TOMMOROW.strftime(DATE_FORMAT)),
         CRAWLER_ROOT, DAILY_LOG_ROOT / 'crawl_minutes.log'),
