@@ -94,7 +94,7 @@ if __name__ == '__main__':
     parser.add_argument('-s', '--start_date', help='開始日（例: 2020-01-01）', type=date_type)
     parser.add_argument('-e', '--end_date', help='終了日（例: 2020-01-01）', type=date_type)
     parser.add_argument('-b', '--skip_bill', help='Billを関連付けない', action='store_true')
-    parser.add_argument('-m', '--skip_minutes', help='Billを関連付けない', action='store_true')
+    parser.add_argument('-m', '--skip_minutes', help='Minutesを関連付けない', action='store_true')
     parser.add_argument('-t', '--skip_timeline', help='Timelineを関連付けない', action='store_true')
     parser.add_argument('-v', '--verbose', action='store_true')
     args = parser.parse_args()
