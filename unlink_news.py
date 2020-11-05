@@ -12,12 +12,12 @@ def main():
     objects = []
     if args.bill:
         bills = gql_client.get_all_bills(['id', 'news'])
-        objects += bills
         LOGGER.info(f'fetched {len(bills)} bills to clean')
+        objects += bills
     if args.minutes:
         minutesList = gql_client.get_all_minutes(['id', 'news'])
-        objects += minutesList
         LOGGER.info(f'fetched {len(minutesList)} minutes to clean')
+        objects += minutesList
     LOGGER.info(f'registered {len(objects)} objects to clean')
 
     for obj in objects:
