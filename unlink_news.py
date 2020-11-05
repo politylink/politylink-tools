@@ -35,5 +35,4 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     logging.basicConfig(level=logging.DEBUG if args.verbose else logging.INFO)
-    logging.getLogger('elasticsearch').setLevel(logging.WARNING)
     main()
