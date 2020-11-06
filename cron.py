@@ -17,6 +17,7 @@ TODAY = datetime.now().date()
 TOMORROW = TODAY + timedelta(1)
 DAY_AFTER_TOMORROW = TODAY + timedelta(2)
 SEVEN_DAYS_AGO = TODAY - timedelta(7)
+ONE_MONTH_AGO = TODAY - timedelta(30)
 DATE_FORMAT = '%Y-%m-%d'
 
 LOG_DATE_FORMAT = "%Y-%m-%d %I:%M:%S"
@@ -54,7 +55,7 @@ DAILY_TASKS = [
         SEVEN_DAYS_AGO.strftime(DATE_FORMAT), TOMORROW.strftime(DATE_FORMAT)),
         TOOLS_ROOT, DAILY_LOG_ROOT / 'process_news.log'),
     BashTask('poetry run python timeline.py --start_date {} --end_date {}'.format(
-        SEVEN_DAYS_AGO.strftime(DATE_FORMAT), DAY_AFTER_TOMORROW.strftime(DATE_FORMAT)),
+        ONE_MONTH_AGO.strftime(DATE_FORMAT), DAY_AFTER_TOMORROW.strftime(DATE_FORMAT)),
         TOOLS_ROOT, DAILY_LOG_ROOT / 'process_timeline.log'),
 ]
 
@@ -66,8 +67,9 @@ HOURLY_TASKS = [
              CRAWLER_ROOT, HOURLY_LOG_ROOT / 'crawl_nikkei.log'),
     BashTask('poetry run scrapy crawl mainichi -a limit=50',
              CRAWLER_ROOT, HOURLY_LOG_ROOT / 'crawl_mainichi.log'),
-    BashTask('poetry run scrapy crawl shugiin_tv',
-             CRAWLER_ROOT, HOURLY_LOG_ROOT / 'crawl_shugiin_tv.log'),
+    BashTask('poetry run scrapy crawl shugiin_tv -a start_date={} -a end_date={}'.format(
+        TODAY.strftime(DATE_FORMAT), TOMORROW.strftime(DATE_FORMAT)),
+        CRAWLER_ROOT, HOURLY_LOG_ROOT / 'crawl_shugiin_tv.log'),
     BashTask('poetry run scrapy crawl sangiin_tv',
              CRAWLER_ROOT, HOURLY_LOG_ROOT / 'crawl_sangiin_tv.log'),
     BashTask('poetry run python news.py --start_date {} --end_date {}'.format(
