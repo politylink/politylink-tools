@@ -47,8 +47,12 @@ def main():
     gql_client = GraphQLClient()
     es_client = ElasticsearchClient()
 
-    news_list = gql_client.get_all_news(['id', 'title', 'published_at'], args.start_date, args.end_date)
+    news_list = gql_client.get_all_news(['id', 'title', 'published_at', 'is_timeline'], args.start_date, args.end_date)
     LOGGER.info(f'fetched {len(news_list)} news from GraphQL')
+
+    if args.check_timeline:
+        news_list = list(filter(lambda x: x.is_timeline, news_list))
+        LOGGER.info(f'filtered {len(news_list)} timeline news')
 
     stats = defaultdict(int)
     for news in tqdm(news_list):
@@ -96,6 +100,7 @@ if __name__ == '__main__':
     parser.add_argument('-b', '--skip_bill', help='Billを関連付けない', action='store_true')
     parser.add_argument('-m', '--skip_minutes', help='Minutesを関連付けない', action='store_true')
     parser.add_argument('-t', '--skip_timeline', help='Timelineを関連付けない', action='store_true')
+    parser.add_argument('--check_timeline', help='timelineフラグがたっているNewsのみを再計算する', action='store_true')
     parser.add_argument('-v', '--verbose', action='store_true')
     args = parser.parse_args()
 
