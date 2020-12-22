@@ -44,7 +44,8 @@ def main():
     LOGGER.info(f'fetched {len(bill_list)} bills')
     minutes_list = gql_client.get_all_minutes(['id'] + MINUTES_DATE_FIELD)
     LOGGER.info(f'fetched {len(minutes_list)} minutes')
-    news_list = gql_client.get_all_news(['id', 'is_timeline'] + NEWS_DATE_FIELD, args.start_date, args.end_date)
+    news_list = gql_client.get_all_news(['id', 'is_timeline'] + NEWS_DATE_FIELD,
+                                        start_date=args.start_date, end_date=args.end_date)
     LOGGER.info(f'fetched {len(news_list)} news')
     date2bill = build_date_dict(bill_list, BILL_DATE_FIELDS)
     date2minutes = build_date_dict(minutes_list, MINUTES_DATE_FIELD)
