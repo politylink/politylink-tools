@@ -47,7 +47,8 @@ def main():
     gql_client = GraphQLClient()
     es_client = ElasticsearchClient()
 
-    news_list = gql_client.get_all_news(['id', 'title', 'published_at', 'is_timeline'], args.start_date, args.end_date)
+    news_list = gql_client.get_all_news(fields=['id', 'title', 'published_at', 'is_timeline'],
+                                        start_date=args.start_date, end_date=args.end_date)
     LOGGER.info(f'fetched {len(news_list)} news from GraphQL')
 
     if args.check_timeline:
