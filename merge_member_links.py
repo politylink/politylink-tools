@@ -37,7 +37,7 @@ def main(fp):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='MemberのリンクをCSVから追加する')
+    parser = argparse.ArgumentParser(description='MemberのリンクをCSVからGraphQLに追加する')
     parser.add_argument('-f', '--file', default='./data/member.csv')
     parser.add_argument('-v', '--verbose', action='store_true')
     args = parser.parse_args()
