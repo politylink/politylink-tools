@@ -1,6 +1,5 @@
 import json
 import magic
-import os
 import sys
 
 from google.cloud import speech
@@ -8,8 +7,6 @@ from google.cloud import storage as gcs
 from mutagen.flac import FLAC
 from pydub import AudioSegment
 
-GOOGLE_APPLICATION_CREDENTIALS = 'Set your GCP service account key file (json format)'
-os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = GOOGLE_APPLICATION_CREDENTIALS
 
 PROJECT = 'politylink'
 

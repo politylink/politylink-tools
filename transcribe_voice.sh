@@ -14,7 +14,7 @@ gsutil cp "${OUTPUT_FILE_WAV}" "${GCS_VOICE_PATH}"
 
 BUCKET="politylink-speech"
 SAVE_PATH='../data/${FILE_NAME}.json'
-python transcription.py "${BUCKET}" "voice/${OUTPUT_FILE_WAV}" "${SAVE_PATH}"
+python transcribe_voice.py "${BUCKET}" "voice/${OUTPUT_FILE_WAV}" "${SAVE_PATH}"
 
 GCS_TRANS_PATH="gs://politylink-speech/transcription/${FILE_NAME}.json"
 gsutil cp "${SAVE_PATH}" "${GCS_TRANS_PATH}"
