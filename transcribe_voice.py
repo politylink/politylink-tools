@@ -1,54 +1,30 @@
 import json
-import magic
+import os
 import sys
+import wave
 
 from google.cloud import speech
-from google.cloud import storage as gcs
-from mutagen.flac import FLAC
-from pydub import AudioSegment
 
 
-PROJECT = 'politylink'
-
-
-def fetch_from_gcs(bucket_name, file_name):
-    client = gcs.Client(project=PROJECT)
-    bucket = client.get_bucket(bucket_name)
-    blob = gcs.Blob(file_name, bucket)
-    content = blob.download_as_bytes()
-    print(f'Fetched data from {bucket_name}/{file_name}')
-
-    return content
-
-
-def get_voice_info(content, file_name):
-    mime = magic.Magic(mime=True).from_buffer(content)
-    if mime == 'audio/x-wav' and '.wav' in file_name:
-        encoding = 'LINEAR16'
-        sound = AudioSegment(content)
-        rate = sound.frame_rate
-        length = sound.duration_seconds
-    elif mime == 'audio/x-flac' and '.flac' in file_name:
-        encoding = 'FLAC'
-        with open(file_name, 'wb') as f:
-            f.write(content)
-            f.close()
-        sound = FLAC(file_name).info
-        rate = sound.sample_rate
-        length = sound.length
+def get_voice_info(local_file_path):
+    if os.path.isfile(local_file_path):
+        wr = wave.open(local_file_path, 'rb')
+        channels = wr.getnchannels()
+        rate = wr.getframerate()
+        frame_num = wr.getnframes()
+        length = 1.0 * frame_num / rate
     else:
-        print('Acceptable type is only "wav" or "flac".')
+        print(f'Error: "{local_file_path}" does not exist.')
         sys.exit()
 
     print('\n-*- audio info -*-')
-    print('filename   : ' + file_name)
-    print('mimetype   : ' + mime)
-    print('sampleRate : ' + str(rate))
-    print('playtime   : ' + str(length) + '[sec]')
-    print('channels : ' + str(sound.channels))
+    print(f'filename   : {local_file_path}')
+    print(f'sampleRate : {str(rate)}')
+    print(f'playtime   : {str(length)} [sec]')
+    print(f'channels   : {str(channels)}')
     print('\nWaiting for operation to complete...')
 
-    return encoding, mime, rate, length, sound
+    return rate, length, channels
 
 
 def save_transcription(response, save_path):
@@ -65,37 +41,35 @@ def save_transcription(response, save_path):
     print(f'Saved in {save_path}')
 
 
-def transcribe_voice(bucket_name, file_name, save_path):
-    client = speech.SpeechClient()
-    audio = {'uri': f'gs://{bucket_name}/{file_name}'}
-
+def transcribe_voice(local_file_path, gcs_file_path, save_path):
     # fetch voice content
-    content = fetch_from_gcs(bucket_name, file_name)
-    encoding, mime, rate, length, sound = get_voice_info(content, file_name)
+    rate, length, channels = get_voice_info(local_file_path)
 
     # cloud cost
     print(f'The cost of the cloud is around ${0.008*length/15:.2f}')
 
     # set config of GCP speech-to-text
     config = {
-        'encoding': encoding,
+        'encoding': 'LINEAR16',
         'sample_rate_hertz': rate,
         'language_code': 'ja-JP',
-        'audio_channel_count': sound.channels,
+        'audio_channel_count': channels,
         'enable_automatic_punctuation': True,
         'diarization_config': {
             "enable_speaker_diarization": True, "min_speaker_count": 6,
             "max_speaker_count": 2}
     }
 
-    # switch methods according to playback
-    if length < 60:
-        response = client.recognize(config=config, audio=audio)
-    else:
-        operation = client.long_running_recognize(config=config, audio=audio)
-        response = operation.result(timeout=length)
+    # set GCS URI of voice data
+    audio = {'uri': gcs_file_path}
+
+    # transcribe voice data
+    client = speech.SpeechClient()
+    operation = client.long_running_recognize(config=config, audio=audio)
+    response = operation.result(timeout=length)
     print('\n-*- transcribe result -*-')
 
+    # save transcribed text data
     save_transcription(response, save_path)
 
 

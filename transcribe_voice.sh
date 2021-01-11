@@ -9,12 +9,12 @@ ffmpeg -protocol_whitelist file,http,https,tcp,tls,crypto -i "${VOICE_URL}" -c c
 OUTPUT_FILE_WAV="${FILE_NAME}.wav"
 ffmpeg -i "${OUTPUT_FILE_MP4}" "${OUTPUT_FILE_WAV}"
 
-GCS_VOICE_PATH="gs://politylink-speech/voice/${FILE_NAME}.wav"
+BUCKET="politylink-speech"
+GCS_VOICE_PATH="gs://${BUCKET}/voice/${OUTPUT_FILE_WAV}"
 gsutil cp "${OUTPUT_FILE_WAV}" "${GCS_VOICE_PATH}"
 
-BUCKET="politylink-speech"
-SAVE_PATH='../data/${FILE_NAME}.json'
-python transcribe_voice.py "${BUCKET}" "voice/${OUTPUT_FILE_WAV}" "${SAVE_PATH}"
+SAVE_PATH="../data/${FILE_NAME}.json"
+python transcribe_voice.py "${OUTPUT_FILE_WAV}" "${GCS_VOICE_PATH}" "${SAVE_PATH}"
 
-GCS_TRANS_PATH="gs://politylink-speech/transcription/${FILE_NAME}.json"
+GCS_TRANS_PATH="gs://${BUCKET}/transcription/${FILE_NAME}.json"
 gsutil cp "${SAVE_PATH}" "${GCS_TRANS_PATH}"
