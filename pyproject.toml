@@ -12,6 +12,11 @@ tqdm = "^4.50.0"
 # needed to add scrapy for politylink-crawler because poetry env switching did not work with subprocess
 scrapy = "2.2.1"
 boto3 = "^1.16.47"
+python-magic = "^0.4.18"
+google-cloud-speech = "^2.0.1"
+google-cloud-storage = "^1.35.0"
+mutagen = "^1.45.1"
+pydub = "^0.24.1"
 
 [tool.poetry.dev-dependencies]
 jupyterlab = "^2.2.8"
