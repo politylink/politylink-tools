@@ -1,8 +1,10 @@
 set -ex
 
-FILE_NAME="video_1"
+# Need to set the environment variable "GOOGLE_APPLICATION_CREDENTIALS".
 
-VOICE_URL="https://webtv-vod.live.ipcasting.jp/vod/mp4:5992.mp4/playlist.m3u8"
+FILE_NAME="video_sangiin_20210118"
+
+VOICE_URL="https://webtv-vod.live.ipcasting.jp/vod/mp4:6097.mp4/playlist.m3u8"
 OUTPUT_FILE_MP4="./data/${FILE_NAME}.mp4"
 ffmpeg -protocol_whitelist file,http,https,tcp,tls,crypto -i "${VOICE_URL}" -c copy "${OUTPUT_FILE_MP4}"
 

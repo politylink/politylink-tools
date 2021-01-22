@@ -56,8 +56,9 @@ def transcribe_voice(local_file_path, gcs_file_path, save_path):
         'audio_channel_count': channels,
         'enable_automatic_punctuation': True,
         'diarization_config': {
-            "enable_speaker_diarization": True, "min_speaker_count": 6,
-            "max_speaker_count": 2}
+            "enable_speaker_diarization": True,
+            "min_speaker_count": 1,
+            "max_speaker_count": 10}
     }
 
     # set GCS URI of voice data
