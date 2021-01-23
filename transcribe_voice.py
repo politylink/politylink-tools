@@ -2,8 +2,7 @@ import json
 import os
 import re
 import sys
-import wave
-
+from pydub import AudioSegment
 from google.cloud import speech
 
 
@@ -31,23 +30,22 @@ def format_transcription(transcription_json):
 
 def get_voice_info(local_file_path):
     if os.path.isfile(local_file_path):
-        wr = wave.open(local_file_path, 'rb')
-        channels = wr.getnchannels()
-        rate = wr.getframerate()
-        frame_num = wr.getnframes()
-        length = 1.0 * frame_num / rate
+        sound = AudioSegment.from_file(local_file_path, format='mp3')
+        channels = sound.channels
+        rate = sound.frame_rate
+        duration = sound.duration_seconds
     else:
         print(f'Error: "{local_file_path}" does not exist.')
         sys.exit()
 
-    print('\n-*- audio info -*-')
+    print('\n-*-------------- audio info --------------*-')
     print(f'filename   : {local_file_path}')
     print(f'sampleRate : {str(rate)}')
-    print(f'playtime   : {str(length)} [sec]')
+    print(f'playtime   : {str(duration)} [sec]')
     print(f'channels   : {str(channels)}')
-    print('\nWaiting for operation to complete...')
+    print('-*--------------------------------------------*-')
 
-    return rate, length, channels
+    return rate, duration, channels
 
 
 def save_transcription(response, save_path):
@@ -67,7 +65,6 @@ def save_transcription(response, save_path):
     # Formatted transcription data
     # save_path extension converts '.json' to '.txt'
     formatted_texts = format_transcription(transcription_json)
-    print(formatted_texts)
     save_text_path = os.path.splitext(save_path)[0] + '.txt'
     with open(save_text_path, 'w') as f:
         f.write(formatted_texts)
@@ -76,10 +73,10 @@ def save_transcription(response, save_path):
 
 def transcribe_voice(local_file_path, gcs_file_path, save_path):
     # fetch voice content
-    rate, length, channels = get_voice_info(local_file_path)
+    rate, duration, channels = get_voice_info(local_file_path)
 
     # cloud cost
-    print(f'The cost of the cloud is around ${0.008*length/15:.2f}')
+    print(f'The cost of the cloud is around ${0.008*duration/15:.2f}')
 
     # set config of GCP speech-to-text
     config = {
@@ -101,7 +98,7 @@ def transcribe_voice(local_file_path, gcs_file_path, save_path):
     client = speech.SpeechClient()
     operation = client.long_running_recognize(config=config, audio=audio)
     print(f'operation name = {operation.operation.name}')
-    response = operation.result(timeout=length)
+    response = operation.result(timeout=duration)
     print('\n-*- transcribe result -*-')
 
     # save transcribed text data
