@@ -12,6 +12,9 @@ def insert_punctuation(text):
     inserted_text = re.sub(r'します(。)?', 'します。', inserted_text)
     inserted_text = re.sub(r'きます(。)?', 'きます。', inserted_text)
     inserted_text = re.sub(r'います(。)?', 'います。', inserted_text)
+    inserted_text = re.sub(r'であります(。)?', 'であります。', inserted_text)
+    inserted_text = re.sub(r'となります(。)?', 'となります。', inserted_text)
+    inserted_text = re.sub(r'参ります(。)?', '参ります。', inserted_text)
 
     return inserted_text
 
