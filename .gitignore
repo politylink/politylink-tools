@@ -5,3 +5,4 @@ poetry.lock
 .ipynb_checkpoints
 __pycache__/
 log/
+voice/
