@@ -67,6 +67,7 @@ def transcribe_voice(local_file_path, gcs_file_path, save_path):
     # transcribe voice data
     client = speech.SpeechClient()
     operation = client.long_running_recognize(config=config, audio=audio)
+    print(f'operation name = {operation.operation.name}')
     response = operation.result(timeout=length)
     print('\n-*- transcribe result -*-')
 
