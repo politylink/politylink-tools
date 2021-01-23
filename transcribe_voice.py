@@ -1,9 +1,29 @@
 import json
 import os
+import re
 import sys
 import wave
 
 from google.cloud import speech
+
+
+def insert_punctuation(text):
+    inserted_text = re.sub(r'ました(。)?', 'ました。', text)
+    inserted_text = re.sub(r'します(。)?', 'します。', inserted_text)
+    inserted_text = re.sub(r'きます(。)?', 'きます。', inserted_text)
+    inserted_text = re.sub(r'います(。)?', 'います。', inserted_text)
+
+    return inserted_text
+
+
+def format_transcription(transcription_json):
+    formatted_texts = ''
+    for i in range(len(transcription_json)):
+        text = transcription_json[f'speech{i}']['transcript']
+        inserted_text = insert_punctuation(text)
+        formatted_texts += inserted_text
+
+    return formatted_texts
 
 
 def get_voice_info(local_file_path):
@@ -35,10 +55,20 @@ def save_transcription(response, save_path):
             'transcript': item.alternatives[0].transcript
         }
 
+    # Raw transcription data
     with open(save_path, 'w') as f:
         json.dump(
             transcription_json, f, indent=4, ensure_ascii=False)
-    print(f'Saved in {save_path}')
+    print(f'Raw data is Saved in {save_path}')
+
+    # Formatted transcription data
+    # save_path extension converts '.json' to '.txt'
+    formatted_texts = format_transcription(transcription_json)
+    print(formatted_texts)
+    save_text_path = os.path.splitext(save_path)[0] + '.txt'
+    with open(save_text_path, 'w') as f:
+        f.write(formatted_texts)
+    print(f'Formatted data is Saved in {save_text_path}')
 
 
 def transcribe_voice(local_file_path, gcs_file_path, save_path):
