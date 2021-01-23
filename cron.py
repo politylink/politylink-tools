@@ -40,9 +40,9 @@ class BashTask:
 
 DAILY_LOG_ROOT = LOG_ROOT / 'daily'
 DAILY_TASKS = [
-    BashTask('poetry run scrapy crawl shugiin -a diet=203',
+    BashTask('poetry run scrapy crawl shugiin',
              CRAWLER_ROOT, DAILY_LOG_ROOT / 'crawl_shugiin.log'),
-    BashTask('poetry run scrapy crawl sangiin -a diet=203',
+    BashTask('poetry run scrapy crawl sangiin',
              CRAWLER_ROOT, DAILY_LOG_ROOT / 'crawl_sangiin.log'),
     BashTask('poetry run scrapy crawl shugiin_committee',
              CRAWLER_ROOT, DAILY_LOG_ROOT / 'crawl_shugiin_committee.log'),
