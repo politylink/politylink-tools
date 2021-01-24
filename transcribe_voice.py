@@ -3,7 +3,7 @@ import os
 import re
 import sys
 from pydub import AudioSegment
-from google.cloud import speech
+from google.cloud import speech_v1p1beta1
 
 
 def insert_punctuation(text):
@@ -78,13 +78,17 @@ def transcribe_voice(local_file_path, gcs_file_path, save_path):
     # cloud cost
     print(f'The cost of the cloud is around ${0.008*duration/15:.2f}')
 
+    # set boosting words
+    speech_contexts = json.load(open('./data/speech_contexts.json', 'r')).values()
+
     # set config of GCP speech-to-text
     config = {
-        'encoding': 'LINEAR16',
+        'encoding': 'MP3',
         'sample_rate_hertz': rate,
         'language_code': 'ja-JP',
         'audio_channel_count': channels,
         'enable_automatic_punctuation': True,
+        'speech_contexts': speech_contexts,
         'diarization_config': {
             "enable_speaker_diarization": True,
             "min_speaker_count": 1,
@@ -95,7 +99,7 @@ def transcribe_voice(local_file_path, gcs_file_path, save_path):
     audio = {'uri': gcs_file_path}
 
     # transcribe voice data
-    client = speech.SpeechClient()
+    client = speech_v1p1beta1.SpeechClient()
     operation = client.long_running_recognize(config=config, audio=audio)
     print(f'operation name = {operation.operation.name}')
     response = operation.result(timeout=duration)
