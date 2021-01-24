@@ -78,6 +78,9 @@ def transcribe_voice(local_file_path, gcs_file_path, save_path):
     # cloud cost
     print(f'The cost of the cloud is around ${0.008*duration/15:.2f}')
 
+    # set boosting words
+    speech_contexts = json.load(open('./data/speech_contexts.json', 'r')).values()
+
     # set config of GCP speech-to-text
     config = {
         'encoding': 'MP3',
@@ -85,6 +88,7 @@ def transcribe_voice(local_file_path, gcs_file_path, save_path):
         'language_code': 'ja-JP',
         'audio_channel_count': channels,
         'enable_automatic_punctuation': True,
+        'speech_contexts': speech_contexts,
         'diarization_config': {
             "enable_speaker_diarization": True,
             "min_speaker_count": 1,
