@@ -51,7 +51,7 @@ def get_voice_info(local_file_path):
     return rate, duration, channels
 
 
-def get_speech_context(json_path):
+def get_speech_contexts(json_path):
     speech_contexts = list(json.load(open(json_path, 'r')).values())
     gql_client = GraphQLClient()
     members = gql_client.get_all_members(['name'])
@@ -94,7 +94,7 @@ def transcribe_voice(local_file_path, gcs_file_path, save_path):
     print(f'The cost of the cloud is around ${0.008 * duration / 15:.2f}')
 
     # set boosting words
-    speech_contexts = get_speech_context('./data/speech_contexts.json')
+    speech_contexts = get_speech_contexts('./data/speech_contexts.json')
 
     # set config of GCP speech-to-text
     config = {
