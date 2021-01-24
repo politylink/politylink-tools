@@ -10,7 +10,7 @@ LOCAL_VOICE_PATH="./voice/${FILE_NAME}.wav"
 LOCAL_TRANS_PATH="./voice/${FILE_NAME}.json"
 
 GCS_BUCKET="politylink-speech-mu"
-GCS_VOICE_PATH="gs://${GCS_BUCKET}/voice/${FILE_NAME}.wav"
+GCS_VOICE_PATH="gs://${GCS_BUCKET}/voice/${FILE_NAME}.mp3"
 GCS_TRANS_PATH="gs://${GCS_BUCKET}/transcription/${FILE_NAME}.json"
 
 ffmpeg -protocol_whitelist file,http,https,tcp,tls,crypto -i "${VIDEO_URL}" -c copy "${LOCAL_VIDEO_PATH}"
