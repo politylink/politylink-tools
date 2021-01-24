@@ -1,9 +1,12 @@
 import json
 import os
 import re
+
 import sys
-from pydub import AudioSegment
 from google.cloud import speech_v1p1beta1
+from pydub import AudioSegment
+
+from politylink.graphql.client import GraphQLClient
 
 
 def insert_punctuation(text):
@@ -48,6 +51,18 @@ def get_voice_info(local_file_path):
     return rate, duration, channels
 
 
+def get_speech_context(json_path):
+    speech_contexts = list(json.load(open(json_path, 'r')).values())
+    gql_client = GraphQLClient()
+    members = gql_client.get_all_members(['name'])
+    member_context = {
+        'phrases': [member.name for member in members],
+        'boost': 20.0
+    }
+    speech_contexts.append(member_context)
+    return speech_contexts
+
+
 def save_transcription(response, save_path):
     transcription_json = {}
     for index, item in enumerate(response.results):
@@ -76,10 +91,10 @@ def transcribe_voice(local_file_path, gcs_file_path, save_path):
     rate, duration, channels = get_voice_info(local_file_path)
 
     # cloud cost
-    print(f'The cost of the cloud is around ${0.008*duration/15:.2f}')
+    print(f'The cost of the cloud is around ${0.008 * duration / 15:.2f}')
 
     # set boosting words
-    speech_contexts = json.load(open('./data/speech_contexts.json', 'r')).values()
+    speech_contexts = get_speech_context('./data/speech_contexts.json')
 
     # set config of GCP speech-to-text
     config = {

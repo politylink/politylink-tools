@@ -14,7 +14,6 @@
     ],
     "boost": 20.0
   },
-
   "middle_priority": {
     "phrases": [
       "政権",
@@ -23,7 +22,6 @@
     ],
     "boost": 10.0
   },
-
   "low_priority": {
     "phrases": [
       "自治体"
