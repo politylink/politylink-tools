@@ -55,6 +55,7 @@ DAILY_TASKS = [
     BashTask('poetry run scrapy crawl minutes -a start_date={} -a end_date={} -a speech=false'.format(
         ONE_MONTH_AGO.strftime(DATE_FORMAT), TOMORROW.strftime(DATE_FORMAT)),
         CRAWLER_ROOT, DAILY_LOG_ROOT / 'crawl_minutes.log'),
+    BashTask('bash crawl_bill_url.sh', CRAWLER_ROOT, DAILY_LOG_ROOT / 'crawl_bill_url.log'),
     BashTask('poetry run python news.py --start_date {} --end_date {}'.format(
         SEVEN_DAYS_AGO.strftime(DATE_FORMAT), TOMORROW.strftime(DATE_FORMAT)),
         TOOLS_ROOT, DAILY_LOG_ROOT / 'process_news.log'),

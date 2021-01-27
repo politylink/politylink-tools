@@ -36,7 +36,7 @@ def main(fp):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Bill.alias, Bill.tagsを手動で登録する')
-    parser.add_argument('-f', '--file', default='./data/alias.csv')
+    parser.add_argument('-f', '--file', default='./data/bill_alias.csv')
     parser.add_argument('-v', '--verbose', action='store_true')
     args = parser.parse_args()
     logging.basicConfig(level=logging.DEBUG if args.verbose else logging.INFO)
