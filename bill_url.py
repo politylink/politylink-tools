@@ -25,7 +25,6 @@ def main(fp):
     df = pd.read_csv(fp).fillna('')
     LOGGER.info(f'loaded {len(df)} records from {fp}')
 
-    bill_finder = BillFinder()
     urls, from_ids, to_ids = [], [], []
     for _, row in df.iterrows():
         try:
@@ -37,9 +36,10 @@ def main(fp):
         urls.append(url)
         from_ids.append(url.id)
         to_ids.append(bill.id)
+    LOGGER.info(f'parse {len(urls)} urls')
     client.bulk_merge(urls)
     client.bulk_link(from_ids, to_ids)
-    LOGGER.info(f'merged {len(urls)} urls')
+    LOGGER.info(f'linked {len(urls)} urls')
 
 
 if __name__ == '__main__':
