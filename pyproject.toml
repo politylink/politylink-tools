@@ -13,7 +13,7 @@ tqdm = "^4.50.0"
 scrapy = "2.2.1"
 boto3 = "^1.16.47"
 google-cloud-speech = "^2.0.1"
-wave = "^0.0.2"
+pydub = "^0.24.1"
 
 [tool.poetry.dev-dependencies]
 jupyterlab = "^2.2.8"

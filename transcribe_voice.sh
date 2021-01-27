@@ -6,7 +6,7 @@ FILE_NAME="sangiin_20210121"
 VIDEO_URL="https://webtv-vod.live.ipcasting.jp/vod/mp4:6109.mp4/playlist.m3u8"
 
 LOCAL_VIDEO_PATH="./voice/${FILE_NAME}.mp4"
-LOCAL_VOICE_PATH="./voice/${FILE_NAME}.wav"
+LOCAL_VOICE_PATH="./voice/${FILE_NAME}.mp3"
 LOCAL_TRANS_PATH="./voice/${FILE_NAME}.json"
 
 GCS_BUCKET="politylink-speech-mu"
