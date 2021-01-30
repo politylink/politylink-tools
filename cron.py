@@ -33,9 +33,12 @@ class BashTask:
     def __repr__(self):
         return f'<BashTask {self.cmd}>'
 
-    def run(self):
+    def run(self, wait=True):
         with open(self.log_fp, 'w') as f:
-            return subprocess.run(self.cmd, shell=True, cwd=self.cwd, stdout=f, stderr=f, encoding='utf-8')
+            if wait:
+                return subprocess.run(self.cmd, shell=True, cwd=self.cwd, stdout=f, stderr=f, encoding='utf-8')
+            else:
+                return subprocess.Popen(self.cmd, shell=True, cwd=self.cwd, stdout=f, stderr=f, encoding='utf-8')
 
 
 DAILY_LOG_ROOT = LOG_ROOT / 'daily'
