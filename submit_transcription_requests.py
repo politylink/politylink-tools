@@ -21,6 +21,7 @@ def get_video_url(urls):
 
 
 def get_m3u8_url(video_url):
+    # ToDO: check if meeting is finished
     try:
         response = requests.get(video_url)
         pattern = 'https?://.*playlist.m3u8'
@@ -60,7 +61,7 @@ def main():
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='会議録をGCPの文字起こしに投げる')
+    parser = argparse.ArgumentParser(description='音声ファイルをGCPの文字起こしAPIに投げる')
     parser.add_argument('-d', '--date', help='文字起こしする日付（yyyy-mm-dd）', type=date_type, default=datetime.now())
     parser.add_argument('-f', '--file', default='./voice/submit')
     parser.add_argument('-v', '--verbose', action='store_true')
