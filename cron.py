@@ -65,6 +65,8 @@ DAILY_TASKS = [
     BashTask('poetry run python timeline.py --start_date {} --end_date {}'.format(
         ONE_MONTH_AGO.strftime(DATE_FORMAT), DAY_AFTER_TOMORROW.strftime(DATE_FORMAT)),
         TOOLS_ROOT, DAILY_LOG_ROOT / 'process_timeline.log'),
+    BashTask('poetry run python submit_transcription_requests.py --date {}'.format(TODAY.strftime(DATE_FORMAT)),
+             TOOLS_ROOT, DAILY_LOG_ROOT / 'submit_transcription.log'),
 ]
 
 HOURLY_LOG_ROOT = LOG_ROOT / 'hourly'
@@ -86,6 +88,8 @@ HOURLY_TASKS = [
     BashTask('poetry run python timeline.py --start_date {} --end_date {}'.format(
         TODAY.strftime(DATE_FORMAT), DAY_AFTER_TOMORROW.strftime(DATE_FORMAT)),
         TOOLS_ROOT, HOURLY_LOG_ROOT / 'process_timeline.log'),
+    BashTask('poetry run python fetch_transcription_results.py --publish',
+             TOOLS_ROOT, HOURLY_LOG_ROOT / 'fetch_transcription.log'),
     BashTask('npm run build && npm run deploy',
              GATSBY_ROOT, HOURLY_LOG_ROOT / 'gatsby.log'),
 ]
