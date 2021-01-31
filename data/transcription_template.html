@@ -1,0 +1,22 @@
+<html>
+<meta charset="utf-8"/>
+<body>
+
+<h1>
+    <a href="{{ url }}">{{ minutes }}（{{ date }}）</a>
+</h1>
+
+<h2>注意</h2>
+<div style="margin: 30px 0;background-color:#FFEFEF">
+    <p>この文字起こしはPolityLinkが国会審議中継から自動生成したもので、PolityLinkはその内容について一切の責任を追いません。</p>
+</div>
+
+<h2>自動文字起こし</h2>
+<div>
+    {% for transcript in transcripts %}
+    <p style="margin: 20px 10px">{{ transcript }}</p>
+    {% endfor %}
+</div>
+
+</body>
+</html>

@@ -14,6 +14,7 @@ scrapy = "2.2.1"
 boto3 = "^1.16.47"
 google-cloud-speech = "^2.0.1"
 pydub = "^0.24.1"
+jinja2 = "^2.11.2"
 
 [tool.poetry.dev-dependencies]
 jupyterlab = "^2.2.8"
