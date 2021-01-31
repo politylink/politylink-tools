@@ -4,21 +4,12 @@ import logging
 import os
 import re
 
-import sys
 from google.cloud import speech_v1p1beta1
-from pydub import AudioSegment
+from pydub.utils import mediainfo
 
 from politylink.graphql.client import GraphQLClient
 
 LOGGER = logging.getLogger(__name__)
-
-
-def get_voice_info(local_file_path):
-    if not os.path.isfile(local_file_path):
-        LOGGER.error(f'"{local_file_path}" does not exist.')
-        sys.exit()
-    sound = AudioSegment.from_file(local_file_path, format='mp3')
-    return sound.frame_rate, sound.duration_seconds, sound.channels
 
 
 def get_speech_contexts(json_path=None):
@@ -87,13 +78,13 @@ def save_transcription(response, save_path):
 
 
 def main(local_file_path, gcs_file_path, contexts_file_path=None, result_file_path=None):
-    rate, duration, channels = get_voice_info(local_file_path)
+    media_info = mediainfo(local_file_path)
     speech_client = speech_v1p1beta1.SpeechClient()
     config = {
         'encoding': 'MP3',
-        'sample_rate_hertz': rate,
+        'sample_rate_hertz': int(media_info['sample_rate']),
         'language_code': 'ja-JP',
-        'audio_channel_count': channels,
+        'audio_channel_count': int(media_info['channels']),
         'enable_automatic_punctuation': True,
         'speech_contexts': get_speech_contexts(contexts_file_path),
         'diarization_config': {
@@ -106,6 +97,7 @@ def main(local_file_path, gcs_file_path, contexts_file_path=None, result_file_pa
     }
     operation = speech_client.long_running_recognize(config=config, audio=audio)
     LOGGER.info(f'submitted Speech-to-Text operation: id={operation.operation.name}')
+    duration = float(media_info['duration'])
     LOGGER.info(f'GCP cost will be around ${0.008 * duration / 15:.2f}')
 
     if result_file_path:
