@@ -15,3 +15,4 @@ yes | ffmpeg -protocol_whitelist file,http,https,tcp,tls,crypto -i "${VIDEO_URL}
 yes | ffmpeg -i "${LOCAL_VIDEO_PATH}" -ar 44100 -ac 1 "${LOCAL_VOICE_PATH}"
 yes | gsutil cp "${LOCAL_VOICE_PATH}" "${GCS_VOICE_PATH}"
 yes | poetry run python transcribe_voice.py --local "${LOCAL_VOICE_PATH}" --gcs "${GCS_VOICE_PATH}"
+yes | rm -f "${LOCAL_VIDEO_PATH}" "${LOCAL_VOICE_PATH}"
