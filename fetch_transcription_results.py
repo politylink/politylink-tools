@@ -56,7 +56,7 @@ def parse_time_str(time_str):
     return float(time_str[:-1])  # remove last "s"
 
 
-def format_transcripts(data):
+def format_transcripts(data, time_thresh=1):
     transcripts = []
     last_end_time = 0.0
     buffer = ''
@@ -69,7 +69,7 @@ def format_transcripts(data):
         start_time = parse_time_str(result['words'][0]['startTime'])
         end_time = parse_time_str(result['words'][-1]['endTime'])
 
-        if start_time - last_end_time >= 3:  # likely speaker has changed
+        if start_time - last_end_time >= time_thresh:  # likely speaker has changed
             if buffer:  # flush buffer
                 transcripts.append(buffer)
                 buffer = ''
@@ -84,11 +84,12 @@ def format_transcripts(data):
 
 def build_html(template, data, minutes):
     date = minutes.start_date_time
+    transcripts = format_transcripts(data, time_thresh=1)
     html = template.render({
         'minutes': minutes.name,
         'date': f'{date.year}-{date.month}-{date.day}',
         'url': 'https://politylink.jp/minutes/{}'.format(minutes.id.split(':')[-1]),
-        'transcripts': format_transcripts(data)
+        'transcripts': transcripts
     })
     return html
 
