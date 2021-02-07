@@ -131,8 +131,9 @@ def main():
 
         json_fp = f'./voice/{job_name}.json'
         html_fp = f'./voice/{job_name}.html'
-        s3_fp = f'minutes/{job_name}.html'
-        s3_url = f'https://text.politylink.jp/{s3_fp}'
+        s3_json_fp = f'minutes/{job_name}.json'
+        s3_html_fp = f'minutes/{job_name}.html'
+        s3_html_url = f'https://text.politylink.jp/{s3_html_fp}'
 
         with open(json_fp, 'w') as f:
             json.dump(data, f, ensure_ascii=False)
@@ -144,11 +145,12 @@ def main():
         LOGGER.info(f'saved HTML in {html_fp}')
 
         if args.publish:
-            s3_client.upload_file(html_fp, 'politylink-text', s3_fp, ExtraArgs={"ContentType": "text/html"})
-            url = build_url(s3_url)
+            s3_client.upload_file(json_fp, 'politylink-text', s3_json_fp, ExtraArgs={"ContentType": "application/json"})
+            s3_client.upload_file(html_fp, 'politylink-text', s3_html_fp, ExtraArgs={"ContentType": "text/html"})
+            url = build_url(s3_html_url)
             graphql_client.merge(url)
             graphql_client.link(url.id, minutes.id)
-            LOGGER.info(f'published HTML to S3: {s3_fp}')
+            LOGGER.info(f'published HTML to S3: {s3_html_url}')
 
 
 if __name__ == '__main__':
