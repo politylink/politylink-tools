@@ -33,7 +33,7 @@ class VoiceSegment:
 
 def load_voice_segments(json_fp):
     """
-    load voice segments from GCP transcription result (JSON)
+    load voice segments from GCP transcription result file (JSON)
     ref: fetch_transcription_results.py
     """
 
@@ -55,9 +55,9 @@ def load_voice_segments(json_fp):
     return segments
 
 
-def load_video_breaks(diff_fp, thresh_diff):
+def load_video_switch_secs(diff_fp, thresh_diff):
     """
-    load video break secs from video diff file (CSV)
+    load video camera switch seconds from video diff file (CSV)
     ref: diff_video.py
     """
 
@@ -66,8 +66,8 @@ def load_video_breaks(diff_fp, thresh_diff):
         return list()
 
     diff_df = pd.read_csv(diff_fp)
-    diff_df = diff_df[diff_df['diff'] > thresh_diff]
-    return list(diff_df['sec'])
+    switch_df = diff_df[diff_df['diff'] > thresh_diff]
+    return list(switch_df['sec'])
 
 
 def set_is_first_by_time(segments: List[VoiceSegment], thresh_sec):
@@ -81,23 +81,23 @@ def set_is_first_by_time(segments: List[VoiceSegment], thresh_sec):
             segments[i].is_first = True
 
 
-def set_is_first_by_video(segments: List[VoiceSegment], video_breaks: List[int]):
+def set_is_first_by_video(segments: List[VoiceSegment], switch_secs: List[int]):
     """
     set is_first flag to VoiceSegment by video camera switch seconds
     inputs need to be sorted in ascending order of time
     """
 
     i, j = 0, 0
-    while i < len(segments) and j < len(video_breaks):
-        seg = segments[i]
-        bre = video_breaks[j]
-        if seg.end_time < bre:
+    while i < len(segments) and j < len(switch_secs):
+        segment = segments[i]
+        switch = switch_secs[j]
+        if segment.end_time < switch:
             i += 1
-        elif bre < seg.start_time:
+        elif switch < segment.start_time:
             segments[i].is_first = True
             j += 1
-        elif seg.start_time <= bre <= seg.end_time:
-            if bre - seg.start_time < seg.end_time - bre:
+        elif segment.start_time <= switch <= segment.end_time:
+            if switch - segment.start_time < segment.end_time - switch:
                 segments[i].is_first = True
             else:
                 if i + 1 < len(segments):
@@ -162,13 +162,13 @@ def process(job_id, time_thresh, diff_thresh, publish):
 
     voice_segments = load_voice_segments(json_fp)
     LOGGER.info(f'loaded {len(voice_segments)} voice segments from {json_fp}')
-    video_breaks = load_video_breaks(diff_fp, diff_thresh)
-    LOGGER.info(f'loaded {len(video_breaks)} video breaks from {diff_fp}')
+    switch_secs = load_video_switch_secs(diff_fp, diff_thresh)
+    LOGGER.info(f'loaded {len(switch_secs)} video switch events from {diff_fp}')
 
     voice_segments[0].is_first = True
     set_is_first_by_time(voice_segments, time_thresh)
-    set_is_first_by_video(voice_segments, video_breaks)
-    LOGGER.info(f'set is_first flag to {sum(map(lambda x: x.is_first, voice_segments))} voice segments')
+    set_is_first_by_video(voice_segments, switch_secs)
+    LOGGER.info(f'set is_first flag to {sum(map(lambda x: x.is_first, voice_segments))} segments')
 
     html = build_html(voice_segments, minutes)
     with open(html_fp, 'w', encoding="utf-8") as f:
@@ -186,9 +186,9 @@ def process(job_id, time_thresh, diff_thresh, publish):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='文字起こしの結果をHTMLに加工する')
-    parser.add_argument('-i', '--id', help='文字起こしのJob ID（PolityLinkのMinutes IDのBody）。指定しない場合はHTMLが存在しない全てのJSONを処理する')
+    parser.add_argument('-i', '--id', help='文字起こしのJob ID（Minutes IDのBody）。指定しない場合はHTMLが存在しない全てのJSONを処理する')
     parser.add_argument('-tt', '--time_thresh', help='この閾値（sec）より長く音声が途切れたら改行する', default=3)
-    parser.add_argument('-dt', '--diff_thresh', help='この閾値（rate）より大きく動画のフレームが変化したら改行する', default=0.5)
+    parser.add_argument('-dt', '--diff_thresh', help='この閾値（rate）より大きく動画が変化したら改行する', default=0.5)
     parser.add_argument('-p', '--publish', help='S3にHTMLをアップロードする', action='store_true')
     parser.add_argument('-v', '--verbose', action='store_true')
     args = parser.parse_args()
