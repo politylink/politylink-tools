@@ -38,20 +38,20 @@ def main():
 
     tasks = []
     for minutes in minutes_list:
-        job_name = minutes.id.split(':')[-1]
-        job_files = glob.glob(f'./voice/{job_name}*')
+        job_id = minutes.id.split(':')[-1]
+        job_files = glob.glob(f'./voice/{job_id}*')
         if not args.overwrite and job_files:
-            LOGGER.info(f'{job_name} is already processed, skipping: {job_files}')
+            LOGGER.info(f'{job_id} is already processed, skipping: {job_files}')
             continue
         try:
             video_url = get_video_url(minutes.urls)
             m3u8_url = get_m3u8_url(video_url)
-            task = BashTask(f'bash transcribe_voice.sh {job_name} {m3u8_url}',
-                            TOOLS_ROOT, LOG_ROOT / 'voice' / f'{job_name}.log')
+            task = BashTask(f'bash transcribe_voice.sh {job_id} {m3u8_url}',
+                            TOOLS_ROOT, LOG_ROOT / 'voice' / f'{job_id}.log')
             tasks.append(task)
-            LOGGER.info(f'created task for {job_name}')
+            LOGGER.info(f'created task for {job_id}')
         except Exception:
-            LOGGER.exception(f'failed to create task for {job_name}')
+            LOGGER.exception(f'failed to create task for {job_id}')
     LOGGER.info(f'created total {len(tasks)} tasks')
 
     for task in tasks:
@@ -61,11 +61,10 @@ def main():
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='音声ファイルをGCPの文字起こしAPIに投げる')
+    parser = argparse.ArgumentParser(description='GraphQLの審議中継のリンクからtranscribe_voice.shを呼び出す')
     parser.add_argument('-d', '--date', help='文字起こしする日付（yyyy-mm-dd）', type=date_type, default=datetime.now())
-    parser.add_argument('-f', '--file', default='./voice/submit')
-    parser.add_argument('-v', '--verbose', action='store_true')
     parser.add_argument('-o', '--overwrite', help='既に実行済ファイルがあっても実行する', action='store_true')
+    parser.add_argument('-v', '--verbose', action='store_true')
     args = parser.parse_args()
 
     logging.basicConfig(level=logging.DEBUG if args.verbose else logging.INFO)
