@@ -18,9 +18,10 @@ def get_frame(cap, sec):
 
 
 def calc_frame_diff_rate(frame1, frame2):
+    # can not use np.abs because of uint8 overflow
     frame_diff = np.minimum(np.subtract(frame1, frame2), np.subtract(frame2, frame1))
     frame_diff_bin = np.where(frame_diff <= PIXEL_DIFF_THRESH, 0, 1)
-    diff_rate = frame_diff_bin.sum() / np.prod(frame_diff_bin.shape)
+    diff_rate = frame_diff_bin.sum() / frame_diff_bin.size
     return diff_rate
 
 

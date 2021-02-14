@@ -16,10 +16,8 @@ from politylink.graphql.schema import Url, Minutes
 from politylink.idgen import idgen
 
 LOGGER = logging.getLogger(__name__)
-VIDEO_DIFF_THRESH = 0.5
-VOICE_DIFF_THRESH = 3
 
-gql_client = GraphQLClient(url='https://graphql.politylink.jp')
+gql_client = GraphQLClient()
 s3_client = boto3.client('s3')
 
 
@@ -154,7 +152,7 @@ def process(job_id, time_thresh, diff_thresh, publish):
     LOGGER.info(f'process {job_id}')
     minutes = gql_client.get(f'Minutes:{job_id}')
     json_fp = f'./voice/{job_id}.json'
-    diff_fp = f'./voice/{job_id}.diff'
+    diff_fp = f'./voice/{job_id}.csv'
     html_fp = f'./voice/{job_id}.html'
     s3_json_fp = f'minutes/{job_id}.json'
     s3_html_fp = f'minutes/{job_id}.html'

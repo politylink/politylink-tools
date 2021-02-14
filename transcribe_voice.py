@@ -50,7 +50,8 @@ def main(local_file_path, gcs_file_path, contexts_file_path=None):
     }
     operation = speech_client.long_running_recognize(config=config, audio=audio)
     LOGGER.info(f'submitted Speech-to-Text operation: id={operation.operation.name}')
-    gcp_cost = 0.008 * float(media_info['duration']) / 15
+    # https://cloud.google.com/speech-to-text/pricing
+    gcp_cost = 0.004 * float(media_info['duration']) / 15
     LOGGER.info(f'GCP cost will be around ${gcp_cost:.2f}')
 
 

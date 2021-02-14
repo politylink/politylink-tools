@@ -10,7 +10,7 @@ VIDEO_URL=$2
 
 LOCAL_VIDEO_PATH="./voice/${JOB_ID}.mp4"
 LOCAL_VOICE_PATH="./voice/${JOB_ID}.mp3"
-LOCAL_DIFF_PATH="./voice/${JOB_ID}.diff"
+LOCAL_DIFF_PATH="./voice/${JOB_ID}.csv"
 
 GCS_BUCKET="politylink-speech-mu"
 GCS_VOICE_PATH="gs://${GCS_BUCKET}/voice/${JOB_ID}.mp3"
