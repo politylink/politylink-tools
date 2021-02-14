@@ -88,8 +88,10 @@ HOURLY_TASKS = [
     BashTask('poetry run python timeline.py --start_date {} --end_date {}'.format(
         TODAY.strftime(DATE_FORMAT), DAY_AFTER_TOMORROW.strftime(DATE_FORMAT)),
         TOOLS_ROOT, HOURLY_LOG_ROOT / 'process_timeline.log'),
-    BashTask('poetry run python fetch_transcription_results.py --publish',
+    BashTask('poetry run python fetch_transcription_results.py',
              TOOLS_ROOT, HOURLY_LOG_ROOT / 'fetch_transcription.log'),
+    BashTask('poetry run python process_transcription_results.py --publish',
+             TOOLS_ROOT, HOURLY_LOG_ROOT / 'process_transcription.log'),
     BashTask('npm run build && npm run deploy',
              GATSBY_ROOT, HOURLY_LOG_ROOT / 'gatsby.log'),
 ]
