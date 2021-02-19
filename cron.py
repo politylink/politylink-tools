@@ -82,6 +82,8 @@ HOURLY_TASKS = [
         CRAWLER_ROOT, HOURLY_LOG_ROOT / 'crawl_shugiin_tv.log'),
     BashTask('poetry run scrapy crawl sangiin_tv',
              CRAWLER_ROOT, HOURLY_LOG_ROOT / 'crawl_sangiin_tv.log'),
+    BashTask('poetry run scrapy crawl vrsdd_tv',
+             CRAWLER_ROOT, HOURLY_LOG_ROOT / 'crawl_vrsdd_tv.log'),
     BashTask('poetry run python news.py --start_date {} --end_date {}'.format(
         TODAY.strftime(DATE_FORMAT), TOMORROW.strftime(DATE_FORMAT)),
         TOOLS_ROOT, HOURLY_LOG_ROOT / 'process_news.log'),
