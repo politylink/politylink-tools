@@ -6,3 +6,4 @@ poetry.lock
 __pycache__/
 log/
 voice/
+wordcloud/
