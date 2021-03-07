@@ -16,6 +16,7 @@ GRAPHQL_URL = 'https://graphql.politylink.jp'
 WORDCLOUD_URL = 'https://api.politylink.jp/tf_idf'
 WORDCLOUD_PARAMS = {
     'font_path': '/system/Library/Fonts/ヒラギノ明朝 ProN.ttc',
+    # 'font_path': '/home/ec2-user/.fonts/NotoSansCJKjp-Regular.otf',
     'background_color': 'white',
     'height': 400,
     'width': 600
@@ -78,6 +79,8 @@ def process(minutes):
 
     if args.publish:
         s3_client.upload_file(local_path, 'politylink', s3_path, ExtraArgs={'ContentType': 'image/jpeg'})
+        minutes.wordcloud = f'https://image.politylink.jp/{s3_path}'
+        gql_client.merge(minutes)
         LOGGER.info(f'published wordcloud to {s3_path}')
 
 
