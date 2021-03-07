@@ -21,7 +21,7 @@ WORDCLOUD_PARAMS = {
     'width': 600
 }
 
-gql_client = GraphQLClient(url='https://graphql.politylink.jp')
+gql_client = GraphQLClient(url=GRAPHQL_URL)
 s3_client = boto3.client('s3')
 
 
@@ -64,8 +64,8 @@ def process(minutes):
 
     try:
         tfidf = fetch_tfidf(minutes)
-    except Exception as e:
-        LOGGER.exception(f'failed to fetch tfidf from wordcloud server: {e}')
+    except Exception:
+        LOGGER.exception(f'failed to fetch tfidf from wordcloud server')
         return
 
     id_ = minutes.id.split(':')[-1]
