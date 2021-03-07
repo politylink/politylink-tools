@@ -32,7 +32,7 @@ def main(query='', bill_id_body=None):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Newsを手動で探すための')
+    parser = argparse.ArgumentParser(description='Newsを手動で探す')
     parser.add_argument('-q', '--query', default='')
     parser.add_argument('-b', '--bill', help='Bill IDのBody')
     parser.add_argument('-v', '--verbose', action='store_true')
