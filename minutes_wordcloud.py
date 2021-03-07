@@ -9,10 +9,10 @@ from tqdm import tqdm
 from wordcloud import WordCloud
 
 from politylink.graphql.client import GraphQLClient
+from politylink.graphql.schema import Minutes
 from utils import date_type
 
 LOGGER = logging.getLogger(__name__)
-GRAPHQL_URL = 'https://graphql.politylink.jp'
 WORDCLOUD_URL = 'https://api.politylink.jp/tf_idf'
 WORDCLOUD_PARAMS = {
     'font_path': '/system/Library/Fonts/ヒラギノ明朝 ProN.ttc',
@@ -22,7 +22,7 @@ WORDCLOUD_PARAMS = {
     'width': 600
 }
 
-gql_client = GraphQLClient(url=GRAPHQL_URL)
+gql_client = GraphQLClient()
 s3_client = boto3.client('s3')
 
 
@@ -79,8 +79,10 @@ def process(minutes):
 
     if args.publish:
         s3_client.upload_file(local_path, 'politylink', s3_path, ExtraArgs={'ContentType': 'image/jpeg'})
-        minutes.wordcloud = f'https://image.politylink.jp/{s3_path}'
-        gql_client.merge(minutes)
+        gql_client.merge(Minutes({
+            'id': minutes.id,
+            'wordcloud': f'https://image.politylink.jp/{s3_path}'
+        }))
         LOGGER.info(f'published wordcloud to {s3_path}')
 
 
