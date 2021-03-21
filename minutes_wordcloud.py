@@ -11,6 +11,7 @@ from wordcloud import WordCloud
 from politylink.elasticsearch.client import ElasticsearchClient
 from politylink.graphql.client import GraphQLClient
 from politylink.graphql.schema import Minutes
+from politylink.nlp.utils import filter_by_pos, WORDCLOUD_POS_TAGS
 from utils import date_type
 
 LOGGER = logging.getLogger(__name__)
@@ -69,7 +70,9 @@ def fetch_tfidf2(minutes, num_items=30):
 
     term2stats = es_client.get_term_statistics(minutes.id)
     tfidf = dict(map(lambda x: (x[0], x[1]['tfidf']), term2stats.items()))
-    return filter_dict_by_value(tfidf, num_items)
+    tfidf = {t: tfidf[t] for t in filter_by_pos(tfidf.keys(), WORDCLOUD_POS_TAGS)}
+    tfidf = filter_dict_by_value(tfidf, num_items)
+    return tfidf
 
 
 def filter_dict_by_value(dict_, num_items):
