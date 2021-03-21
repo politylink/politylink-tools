@@ -8,6 +8,7 @@ import requests
 from tqdm import tqdm
 from wordcloud import WordCloud
 
+from politylink.elasticsearch.client import ElasticsearchClient
 from politylink.graphql.client import GraphQLClient
 from politylink.graphql.schema import Minutes
 from utils import date_type
@@ -24,6 +25,7 @@ WORDCLOUD_PARAMS = {
 
 gql_client = GraphQLClient()
 s3_client = boto3.client('s3')
+es_client = ElasticsearchClient()
 
 
 def to_date(dt):
@@ -34,10 +36,10 @@ def to_date_str(dt):
     return dt.strftime('%Y-%m-%d')
 
 
-def fetch_tfidf(minutes):
+def fetch_tfidf(minutes, num_items=30):
     """
     call wordcloud server to fetch tfidf
-    raises exception when request failed of response is empty
+    raise exception when request failed or response is empty
     """
 
     start_date = to_date(minutes.start_date_time)
@@ -46,7 +48,7 @@ def fetch_tfidf(minutes):
         'committee': minutes.name,
         'start': to_date_str(start_date),
         'end': to_date_str(end_date),
-        'items': 30,
+        'items': num_items,
     }
     LOGGER.debug(f'call wordcloud sever: {request_param}')
     response = requests.post(
@@ -60,13 +62,33 @@ def fetch_tfidf(minutes):
     return tfidf
 
 
+def fetch_tfidf2(minutes, num_items=30):
+    """
+    fetch tfidf from Elasticsearch
+    """
+
+    term2stats = es_client.get_term_statistics(minutes.id)
+    tfidf = dict(map(lambda x: (x[0], x[1]['tfidf']), term2stats.items()))
+    return filter_dict_by_value(tfidf, num_items)
+
+
+def filter_dict_by_value(dict_, num_items):
+    """
+    valueが大きい上位のitemに絞る
+    """
+
+    sorted_items = sorted(dict_.items(), key=lambda x: x[1], reverse=True)
+    num_items = min(len(dict_), num_items)
+    return dict(sorted_items[:num_items])
+
+
 def process(minutes):
     LOGGER.debug(f'process {minutes.id}')
 
     try:
-        tfidf = fetch_tfidf(minutes)
+        tfidf = fetch_tfidf2(minutes, num_items=30)
     except Exception:
-        LOGGER.exception(f'failed to fetch tfidf from wordcloud server')
+        LOGGER.exception(f'failed to fetch tfidf')
         return
 
     id_ = minutes.id.split(':')[-1]
