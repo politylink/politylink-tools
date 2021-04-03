@@ -17,16 +17,18 @@ from utils import date_type
 LOGGER = logging.getLogger(__name__)
 WORDCLOUD_URL = 'https://api.politylink.jp/tf_idf'
 WORDCLOUD_PARAMS = {
-    'font_path': '/system/Library/Fonts/ヒラギノ明朝 ProN.ttc',
-    # 'font_path': '/home/ec2-user/.fonts/NotoSansCJKjp-Regular.otf',
+    # 'font_path': '/system/Library/Fonts/ヒラギノ明朝 ProN.ttc',
+    'font_path': '/home/ec2-user/.fonts/NotoSansCJKjp-Regular.otf',
     'background_color': 'white',
     'height': 400,
     'width': 600
 }
+# ELASTICSEARCH_URL = 'http://localhost:9200'
+ELASTICSEARCH_URL = 'https://es.politylink.jp'
 
 gql_client = GraphQLClient()
 s3_client = boto3.client('s3')
-es_client = ElasticsearchClient()
+es_client = ElasticsearchClient(ELASTICSEARCH_URL)
 
 
 def to_date(dt):
