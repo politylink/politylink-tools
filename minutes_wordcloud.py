@@ -17,8 +17,8 @@ from utils import date_type
 
 LOGGER = logging.getLogger(__name__)
 WORDCLOUD_PARAMS = {
-    'font_path': '/system/Library/Fonts/ヒラギノ明朝 ProN.ttc',
-    # 'font_path': '/home/ec2-user/.fonts/NotoSansCJKjp-Regular.otf',
+    # 'font_path': '/system/Library/Fonts/ヒラギノ明朝 ProN.ttc',
+    'font_path': '/home/ec2-user/.fonts/NotoSansCJKjp-Regular.otf',
     'background_color': 'white',
     'height': 400,
     'width': 600
@@ -45,13 +45,13 @@ def fetch_term_statistics(minutes_id):
     return term2stats
 
 
-def process(minutes, term2stats):
-    LOGGER.debug(f'process {minutes.id}')
+def process(minutes_id, term2stats):
+    LOGGER.debug(f'process {minutes_id}')
 
     tfidf = dict(map(lambda x: (x[0], x[1][1]), term2stats.items()))
     tfidf = filter_dict_by_value(tfidf, num_items=30)
 
-    id_ = minutes.id.split(':')[-1]
+    id_ = minutes_id.split(':')[-1]
     local_path = f'./wordcloud/minutes/{id_}.jpg'
     s3_path = f'minutes/{id_}.jpg'
 
@@ -62,7 +62,7 @@ def process(minutes, term2stats):
     if args.publish:
         s3_client.upload_file(local_path, 'politylink', s3_path, ExtraArgs={'ContentType': 'image/jpeg'})
         gql_client.merge(Minutes({
-            'id': minutes.id,
+            'id': minutes_id,
             'wordcloud': f'https://image.politylink.jp/{s3_path}'
         }))
         LOGGER.info(f'published wordcloud to {s3_path}')
@@ -109,7 +109,7 @@ def main():
             LOGGER.exception(f'failed to load term statistics from Elasticsearch for {minutes.id}')
             continue
         all_data[minutes.id] = term2stats
-        process(minutes, term2stats)
+        process(minutes.id, term2stats)
     LOGGER.info(f'processed {len(minutes_list)} minutes')
     save_all_data(all_data, args.file)
     LOGGER.info(f'saved {len(all_data)} data to {args.file}')
