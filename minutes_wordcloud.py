@@ -108,6 +108,9 @@ def main():
         except ElasticsearchException:
             LOGGER.exception(f'failed to load term statistics from Elasticsearch for {minutes.id}')
             continue
+        if not term2stats:
+            LOGGER.warning(f'term statistic is empty for {minutes.id}')
+            continue
         all_data[minutes.id] = term2stats
         process(minutes.id, term2stats)
     LOGGER.info(f'processed {len(minutes_list)} minutes')
