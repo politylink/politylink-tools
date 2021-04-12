@@ -1,21 +1,21 @@
 import argparse
 import json
 import logging
-from datetime import date, timedelta
+import os
+from datetime import date
 
 import boto3
-import requests
 from tqdm import tqdm
 from wordcloud import WordCloud
 
-from politylink.elasticsearch.client import ElasticsearchClient
+from politylink.elasticsearch.client import ElasticsearchClient, ElasticsearchException
 from politylink.graphql.client import GraphQLClient
 from politylink.graphql.schema import Minutes
 from politylink.nlp.utils import filter_by_pos, WORDCLOUD_POS_TAGS
+from politylink.utils import filter_dict_by_value
 from utils import date_type
 
 LOGGER = logging.getLogger(__name__)
-WORDCLOUD_URL = 'https://api.politylink.jp/tf_idf'
 WORDCLOUD_PARAMS = {
     # 'font_path': '/system/Library/Fonts/ヒラギノ明朝 ProN.ttc',
     'font_path': '/home/ec2-user/.fonts/NotoSansCJKjp-Regular.otf',
@@ -23,80 +23,35 @@ WORDCLOUD_PARAMS = {
     'height': 400,
     'width': 600
 }
-# ELASTICSEARCH_URL = 'http://localhost:9200'
-ELASTICSEARCH_URL = 'https://es.politylink.jp'
 
 gql_client = GraphQLClient()
 s3_client = boto3.client('s3')
-es_client = ElasticsearchClient(ELASTICSEARCH_URL)
+es_client = ElasticsearchClient()
 
 
-def to_date(dt):
-    return date(year=dt.year, month=dt.month, day=dt.day)
-
-
-def to_date_str(dt):
-    return dt.strftime('%Y-%m-%d')
-
-
-def fetch_tfidf(minutes, num_items=30):
+def fetch_term_statistics(minutes_id):
     """
-    call wordcloud server to fetch tfidf
-    raise exception when request failed or response is empty
+    fetch term statistics from Elasticsearch and apply filtering for wordcloud
+    for storage efficiency, stats are compressed to two value tuple: (tf, tfidf)
     """
 
-    start_date = to_date(minutes.start_date_time)
-    end_date = start_date + timedelta(days=1)
-    request_param = {
-        'committee': minutes.name,
-        'start': to_date_str(start_date),
-        'end': to_date_str(end_date),
-        'items': num_items,
-    }
-    LOGGER.debug(f'call wordcloud sever: {request_param}')
-    response = requests.post(
-        WORDCLOUD_URL,
-        json.dumps(request_param, ensure_ascii=False).encode('utf-8'),
-        headers={'Content-Type': 'application/json'}
-    )
-    tfidf = response.json()[0]['tfidf']
-    if not tfidf:
-        raise ValueError(f'empty tfidf returned')
-    return tfidf
+    term2stats = dict()
+    term2stats_raw = es_client.get_term_statistics(minutes_id)
+    terms = filter_by_pos(term2stats_raw.keys(), WORDCLOUD_POS_TAGS)
+    for term in terms:
+        stats = term2stats_raw[term]
+        if stats['tf'] > 1:
+            term2stats[term] = (stats['tf'], round(stats['tfidf'], 2))
+    return term2stats
 
 
-def fetch_tfidf2(minutes, num_items=30):
-    """
-    fetch tfidf from Elasticsearch
-    """
+def process(minutes_id, term2stats):
+    LOGGER.debug(f'process {minutes_id}')
 
-    term2stats = es_client.get_term_statistics(minutes.id)
-    tfidf = dict(map(lambda x: (x[0], x[1]['tfidf']), term2stats.items()))
-    tfidf = {t: tfidf[t] for t in filter_by_pos(tfidf.keys(), WORDCLOUD_POS_TAGS)}
-    tfidf = filter_dict_by_value(tfidf, num_items)
-    return tfidf
+    tfidf = dict(map(lambda x: (x[0], x[1][1]), term2stats.items()))
+    tfidf = filter_dict_by_value(tfidf, num_items=30)
 
-
-def filter_dict_by_value(dict_, num_items):
-    """
-    valueが大きい上位のitemに絞る
-    """
-
-    sorted_items = sorted(dict_.items(), key=lambda x: x[1], reverse=True)
-    num_items = min(len(dict_), num_items)
-    return dict(sorted_items[:num_items])
-
-
-def process(minutes):
-    LOGGER.debug(f'process {minutes.id}')
-
-    try:
-        tfidf = fetch_tfidf2(minutes, num_items=30)
-    except Exception:
-        LOGGER.exception(f'failed to fetch tfidf')
-        return
-
-    id_ = minutes.id.split(':')[-1]
+    id_ = minutes_id.split(':')[-1]
     local_path = f'./wordcloud/minutes/{id_}.jpg'
     s3_path = f'minutes/{id_}.jpg'
 
@@ -107,19 +62,36 @@ def process(minutes):
     if args.publish:
         s3_client.upload_file(local_path, 'politylink', s3_path, ExtraArgs={'ContentType': 'image/jpeg'})
         gql_client.merge(Minutes({
-            'id': minutes.id,
+            'id': minutes_id,
             'wordcloud': f'https://image.politylink.jp/{s3_path}'
         }))
         LOGGER.info(f'published wordcloud to {s3_path}')
 
 
 def is_target_minutes(minutes):
+    def to_date(dt):
+        return date(year=dt.year, month=dt.month, day=dt.day)
+
     if not minutes.ndl_min_id:
         return False
-    dt = to_date(minutes.start_date_time)
-    if not (args.start_date <= dt <= args.end_date):
+    minutes_dt = to_date(minutes.start_date_time)
+    if not (args.start_date <= minutes_dt < args.end_date):
         return False
     return True
+
+
+def load_all_data(json_fp):
+    if os.path.exists(json_fp):
+        with open(json_fp, 'r') as f:
+            return json.load(f)
+    else:
+        LOGGER.warning(f'{json_fp} does not exist')
+        return dict()
+
+
+def save_all_data(all_data, json_fp):
+    with open(json_fp, 'w') as f:
+        json.dump(all_data, f, ensure_ascii=False)
 
 
 def main():
@@ -127,15 +99,28 @@ def main():
     LOGGER.info(f'loaded {len(minutes_list)} minutes from GraphQL')
     minutes_list = list(filter(lambda x: is_target_minutes(x), minutes_list))
     LOGGER.info(f'filtered {len(minutes_list)} target minutes')
+    all_data = load_all_data(args.file)
+    LOGGER.info(f'loaded {len(all_data)} data from {args.file}')
 
     for minutes in tqdm(minutes_list):
-        process(minutes)
+        try:
+            term2stats = fetch_term_statistics(minutes.id)
+        except ElasticsearchException:
+            LOGGER.exception(f'failed to load term statistics from Elasticsearch for {minutes.id}')
+            continue
+        all_data[minutes.id] = term2stats
+        process(minutes.id, term2stats)
+    LOGGER.info(f'processed {len(minutes_list)} minutes')
+    save_all_data(all_data, args.file)
+    LOGGER.info(f'saved {len(all_data)} data to {args.file}')
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Minutesのワードクラウドを生成する')
     parser.add_argument('-s', '--start_date', help='開始日（例: 2020-01-01）', type=date_type, required=True)
-    parser.add_argument('-e', '--end_date', help='終了日（例: 2020-01-01）', type=date_type, required=True)
+    parser.add_argument('-e', '--end_date', help='終了日（例: 2020-01-02）', type=date_type, required=True)
+    parser.add_argument('-f', '--file', help='ワードクラウドサーバー用に全てのtfidfを保存するjsonファイル。',
+                        default='./wordcloud/minutes/tfidf.json')
     parser.add_argument('-p', '--publish', help='画像をS3にアップロードする', action='store_true')
     parser.add_argument('-v', '--verbose', action='store_true')
     args = parser.parse_args()
