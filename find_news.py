@@ -9,7 +9,7 @@ LOGGER = logging.getLogger(__name__)
 
 
 def main(query='', bill_id_body=None):
-    es_client = ElasticsearchClient(url='http://localhost:9201')
+    es_client = ElasticsearchClient(url='https://es.politylink.jp/')
     gql_client = GraphQLClient(url='https://graphql.politylink.jp/')
 
     if bill_id_body:
