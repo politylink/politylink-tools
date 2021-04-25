@@ -55,9 +55,12 @@ DAILY_TASKS = [
              CRAWLER_ROOT, DAILY_LOG_ROOT / 'crawl_shugiin_minutes.log'),
     BashTask('poetry run scrapy crawl sangiin_minutes',
              CRAWLER_ROOT, DAILY_LOG_ROOT / 'crawl_sangiin_minutes.log'),
-    BashTask('poetry run scrapy crawl minutes -a start_date={} -a end_date={} -a speech=false -a text=true -a elasticsearch=https://es.politylink.jp'.format(
+    BashTask('poetry run scrapy crawl minutes -a start_date={} -a end_date={} -a speech=false -a text=true'.format(
         ONE_MONTH_AGO.strftime(DATE_FORMAT), TOMORROW.strftime(DATE_FORMAT)),
         CRAWLER_ROOT, DAILY_LOG_ROOT / 'crawl_minutes.log'),
+    BashTask('poetry run python minutes_wordcloud.py --start_date {} --end_date {} --publish'.format(
+        ONE_MONTH_AGO.strftime(DATE_FORMAT), TOMORROW.strftime(DATE_FORMAT)),
+        TOOLS_ROOT, DAILY_LOG_ROOT / 'minutes_wordcloud.log'),
     BashTask('bash crawl_bill_url.sh', CRAWLER_ROOT, DAILY_LOG_ROOT / 'crawl_bill_url.log'),
     BashTask('poetry run python news.py --start_date {} --end_date {}'.format(
         SEVEN_DAYS_AGO.strftime(DATE_FORMAT), TOMORROW.strftime(DATE_FORMAT)),
