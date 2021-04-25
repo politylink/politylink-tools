@@ -8,15 +8,16 @@ from politylink.graphql.client import GraphQLClient, GraphQLException
 LOGGER = logging.getLogger(__name__)
 
 
-def main(query='', bill_id_body=None):
-    es_client = ElasticsearchClient(url='https://es.politylink.jp/')
-    gql_client = GraphQLClient(url='https://graphql.politylink.jp/')
+def main():
+    es_client = ElasticsearchClient()
+    gql_client = GraphQLClient()
 
-    if bill_id_body:
-        bill = gql_client.get(f'Bill:{bill_id_body}')
+    query = args.query
+    if args.bill:
+        bill = gql_client.get(f'Bill:{args.bill}')
         query += bill.name
 
-    news_texts = es_client.search(NewsText, query)
+    news_texts = es_client.search(NewsText, query=query, start_date_str=args.start, end_date_str=args.end)
     for news_text in news_texts:
         try:
             news = gql_client.get(news_text.id)
@@ -36,7 +37,9 @@ if __name__ == '__main__':
     parser.add_argument('-q', '--query', default='')
     parser.add_argument('-b', '--bill', help='Bill IDのBody')
     parser.add_argument('-v', '--verbose', action='store_true')
+    parser.add_argument('-s', '--start', help='開始日（例: 2020-01-01）', default=None)
+    parser.add_argument('-e', '--end', help='終了日（例: 2020-01-01）', default=None)
     args = parser.parse_args()
     logging.basicConfig(level=logging.DEBUG if args.verbose else logging.INFO)
     logging.getLogger('sgqlc').setLevel(logging.INFO)
-    main(args.query, args.bill)
+    main()
