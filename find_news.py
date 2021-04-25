@@ -14,7 +14,7 @@ def main():
 
     query = args.query
     if args.bill:
-        bill = gql_client.get(f'Bill:{args.bill}')
+        bill = gql_client.get(f'Bill:{args.bill}', fields=['id', 'name'])
         query += bill.name
 
     news_texts = es_client.search(NewsText, query=query, start_date_str=args.start, end_date_str=args.end)
