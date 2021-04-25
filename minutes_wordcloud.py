@@ -3,8 +3,10 @@ import json
 import logging
 import os
 from datetime import date
+from pathlib import Path
 
 import boto3
+import requests
 from tqdm import tqdm
 from wordcloud import WordCloud
 
@@ -16,6 +18,8 @@ from politylink.utils import filter_dict_by_value
 from utils import date_type
 
 LOGGER = logging.getLogger(__name__)
+WORDCLOUD_SERVER = 'https://api.politylink.jp'
+# WORDCLOUD_SERVER = 'http://localhost:5000'
 WORDCLOUD_PARAMS = {
     # 'font_path': '/system/Library/Fonts/ヒラギノ明朝 ProN.ttc',
     'font_path': '/home/ec2-user/.fonts/NotoSansCJKjp-Regular.otf',
@@ -94,6 +98,14 @@ def save_all_data(all_data, json_fp):
         json.dump(all_data, f, ensure_ascii=False)
 
 
+def post_all_date(json_fp):
+    requests.post(
+        f'{WORDCLOUD_SERVER}/load',
+        json.dumps({'file': str(Path(json_fp).resolve())}),
+        headers={'Content-Type': 'application/json'}
+    )
+
+
 def main():
     minutes_list = gql_client.get_all_minutes(fields=['id', 'name', 'start_date_time', 'ndl_min_id'])
     LOGGER.info(f'loaded {len(minutes_list)} minutes from GraphQL')
@@ -116,6 +128,8 @@ def main():
     LOGGER.info(f'processed {len(minutes_list)} minutes')
     save_all_data(all_data, args.file)
     LOGGER.info(f'saved {len(all_data)} data to {args.file}')
+    post_all_date(args.file)
+    LOGGER.info(f'posted {args.file} to wordcloud server')
 
 
 if __name__ == '__main__':
