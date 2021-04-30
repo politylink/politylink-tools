@@ -42,7 +42,7 @@ def fetch_term_statistics(minutes_id):
     term2stats = dict()
     term2stats_raw = es_client.get_term_statistics(minutes_id)
     terms = filter_by_pos(term2stats_raw.keys(), WORDCLOUD_POS_TAGS)
-    terms -= STOPWORDS
+    terms = set(terms) - STOPWORDS
     for term in terms:
         stats = term2stats_raw[term]
         if stats['tf'] > 1:
