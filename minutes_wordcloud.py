@@ -13,7 +13,7 @@ from wordcloud import WordCloud
 from politylink.elasticsearch.client import ElasticsearchClient, ElasticsearchException
 from politylink.graphql.client import GraphQLClient
 from politylink.graphql.schema import Minutes
-from politylink.nlp.utils import filter_by_pos, WORDCLOUD_POS_TAGS
+from politylink.nlp.utils import filter_by_pos, WORDCLOUD_POS_TAGS, STOPWORDS
 from politylink.utils import filter_dict_by_value
 from utils import date_type
 
@@ -42,6 +42,7 @@ def fetch_term_statistics(minutes_id):
     term2stats = dict()
     term2stats_raw = es_client.get_term_statistics(minutes_id)
     terms = filter_by_pos(term2stats_raw.keys(), WORDCLOUD_POS_TAGS)
+    terms = set(terms) - STOPWORDS
     for term in terms:
         stats = term2stats_raw[term]
         if stats['tf'] > 1:
