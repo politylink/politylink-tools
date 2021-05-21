@@ -34,11 +34,11 @@ def buildThumbnail(response, uuid):
 def main():
     client = GraphQLClient(url="https://graphql.politylink.jp/")
     bills = client.get_all_bills(fields=['id', 'urls'])
-    #s3 = boto3.resource('s3')
     stats = defaultdict(int)
+    s3 = boto3.resource('s3')
     for bill in tqdm(bills):
         summary_pdf = next(filter(lambda x: x['title'] == "概要PDF", bill['urls']), None)
-        LOGGER.debug(f'Processing ... {bill}')
+        LOGGER.debug(f'Processing ... {bill.id}')
         if summary_pdf:
             stats['process'] += 1
             try:
@@ -49,8 +49,8 @@ def main():
                 stats['fail'] += 1
                 continue
             object_key = 'bill/{}.png'.format(bill.id.split(':')[-1])
-            #s3.Bucket('politylink').put_object(Key=object_key, Body=thumbnail, ContentType="image/png")
-            #time.sleep(1)
+            s3.Bucket('politylink').put_object(Key=object_key, Body=thumbnail, ContentType="image/png")
+            time.sleep(1)
     LOGGER.info('processed {} bills ({} success, {} fail)'.format(
         stats['process'], stats['process'] - stats['fail'], stats['fail']
     ))
