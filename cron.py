@@ -61,6 +61,8 @@ DAILY_TASKS = [
     BashTask('poetry run python minutes_wordcloud.py --start_date {} --end_date {} --publish'.format(
         ONE_MONTH_AGO.strftime(DATE_FORMAT), TOMORROW.strftime(DATE_FORMAT)),
         TOOLS_ROOT, DAILY_LOG_ROOT / 'minutes_wordcloud.log'),
+    BashTask('poetry run python bill_thumbnail.py --publish',
+             TOOLS_ROOT, DAILY_LOG_ROOT / 'bill_thumbnail.log'),
     BashTask('bash crawl_bill_url.sh', CRAWLER_ROOT, DAILY_LOG_ROOT / 'crawl_bill_url.log'),
     BashTask('poetry run python news.py --start_date {} --end_date {}'.format(
         SEVEN_DAYS_AGO.strftime(DATE_FORMAT), TOMORROW.strftime(DATE_FORMAT)),

@@ -21,7 +21,7 @@ def main():
     members = client.get_all_members(fields=['id', 'image'])
     s3 = boto3.resource('s3')
     for member in tqdm(members):
-        response = requests.get(member['image'])
+        response = requests.get(member.image)
         object_key = 'member/{}.jpg'.format(member.id.split(':')[-1])
         s3.Bucket('politylink').put_object(Key=object_key, Body=response.content, ContentType="image/jpeg")
         time.sleep(1)
