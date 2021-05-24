@@ -70,6 +70,8 @@ DAILY_TASKS = [
     BashTask('poetry run python timeline.py --start_date {} --end_date {}'.format(
         ONE_MONTH_AGO.strftime(DATE_FORMAT), DAY_AFTER_TOMORROW.strftime(DATE_FORMAT)),
         TOOLS_ROOT, DAILY_LOG_ROOT / 'process_timeline.log'),
+    BashTask('poetry run python elasitcsearch_syncer.py',
+             TOOLS_ROOT, DAILY_LOG_ROOT / 'elasitcsearch_syncer.log'),
 ]
 
 HOURLY_LOG_ROOT = LOG_ROOT / 'hourly'
