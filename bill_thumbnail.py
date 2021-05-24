@@ -20,7 +20,7 @@ requires ~/.aws/credentials
 https://boto3.amazonaws.com/v1/documentation/api/latest/guide/quickstart.html
 """
 
-def build_thumbnail(data, local_path):
+def save_thumbnail(data, local_path):
     image = wandImage(blob=data, resolution=300, format="pdf")
     if len(image.sequence) > 1:
         # Select the first page of the pdf
@@ -47,7 +47,7 @@ def main():
             local_path = f'./image/bill/{id_}.png'
             try:
                 response = requests.get(summary_pdf.url)
-                thumbnail = build_thumbnail(response, local_path)
+                thumbnail = save_thumbnail(response, local_path)
             except Exception as e:
                 LOGGER.warning(f'failed to convert summary pdf to png: {e}')
                 stats['fail'] += 1
