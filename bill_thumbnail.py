@@ -35,7 +35,7 @@ def main():
     client = GraphQLClient(url="https://graphql.politylink.jp/")
     bills = client.get_all_bills(fields=['id', 'urls'])
     stats = defaultdict(int)
-    s3 = boto3.resource('s3')
+    s3_client = boto3.client('s3')
     os.makedirs("./image/bill", exist_ok=True)
 
     for bill in tqdm(bills):
@@ -53,8 +53,8 @@ def main():
                 stats['fail'] += 1
                 continue
             if args.publish:
-                object_key = f'bill/{id_}.png'
-                s3.Bucket('politylink').put_object(Key=object_key, Body=thumbnail, ContentType="image/png")
+                s3_path = f'bill/{id_}.png'
+                s3_client.upload_file(local_path, 'politylink', s3_path, ExtraArgs={'ContentType': 'image/png'})
             time.sleep(1)
     LOGGER.info('processed {} bills ({} success, {} fail)'.format(
         stats['process'], stats['process'] - stats['fail'], stats['fail']
