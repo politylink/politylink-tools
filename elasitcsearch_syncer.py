@@ -6,12 +6,12 @@ from sgqlc.operation import Operation
 from tqdm import tqdm
 
 from politylink.elasticsearch.client import ElasticsearchClient, OpType
-from politylink.elasticsearch.schema import BillText
+from politylink.elasticsearch.schema import BillText, BillCategory, BillStatus
 from politylink.graphql.client import GraphQLClient, Query
-from politylink.graphql.schema import _BillFilter
+from politylink.graphql.schema import _BillFilter, Bill
 
 LOGGER = logging.getLogger(__name__)
-gql_client = GraphQLClient()
+gql_client = GraphQLClient(url='https://graphql.politylink.jp')
 es_client = ElasticsearchClient()
 
 ROOT_FIELDS = ['id', 'name', 'bill_number', 'category', 'aliases', 'tags']
@@ -57,14 +57,15 @@ def calc_last_updated_date(bill):
     return last_updated_date
 
 
-def build_bill_text(bill):
+def build_bill_text(bill: Bill):
     bill_text = BillText(None)
     bill_text.id = bill.id
     bill_text.title = bill.name
-    bill_text.category = bill.category
+    bill_text.category = BillCategory.from_gql(bill).index
     if bill.submitted_date.formatted:
         bill_text.submitted_date = to_date_str(bill.submitted_date)
         bill_text.last_updated_date = calc_last_updated_date(bill)
+        bill_text.status = BillStatus.from_gql(bill).index
     if bill.tags:
         bill_text.tags = bill.tags
     if bill.aliases:
