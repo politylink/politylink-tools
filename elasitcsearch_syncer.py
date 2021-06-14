@@ -69,7 +69,7 @@ def build_bill_text(bill: Bill):
     if bill.tags:
         bill_text.tags = bill.tags
     if bill.aliases:
-        bill_text.tags = bill.aliases
+        bill_text.aliases = bill.aliases
     bill_text.submitted_diet = extract_diet_number(bill.bill_number)
     if bill.belonged_to_diets:
         bill_text.belonged_to_diets = [diet.number for diet in bill.belonged_to_diets]
