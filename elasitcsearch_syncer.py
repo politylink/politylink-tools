@@ -14,16 +14,23 @@ LOGGER = logging.getLogger(__name__)
 gql_client = GraphQLClient(url='https://graphql.politylink.jp')
 es_client = ElasticsearchClient()
 
-ROOT_FIELDS = ['id', 'name', 'bill_number', 'category', 'aliases', 'tags']
-DATE_FIELDS = ['submitted_date', 'passed_representatives_committee_date', 'passed_representatives_date',
-               'passed_councilors_committee_date', 'passed_councilors_date', 'proclaimed_date']
+GQL_ROOT_FIELDS = ['id', 'name', 'bill_number', 'category', 'aliases', 'tags']
+GQL_DATE_FIELDS = ['submitted_date', 'passed_representatives_committee_date', 'passed_representatives_date',
+                   'passed_councilors_committee_date', 'passed_councilors_date', 'proclaimed_date']
+GQL_ES_FIELD_MAP = {
+    Bill.id: BillText.Field.ID,
+    Bill.bill_number: BillText.Field.BILL_NUMBER,
+    Bill.name: BillText.Field.TITLE,
+    Bill.tags: BillText.Field.TAGS,
+    Bill.aliases: BillText.Field.ALIASES
+}
 
 
 def fetch_bill(bill_id):
     op = Operation(Query)
     bills = op.bill(filter=_BillFilter({'id': bill_id}))
 
-    for field in ROOT_FIELDS + DATE_FIELDS:
+    for field in GQL_ROOT_FIELDS + GQL_DATE_FIELDS:
         getattr(bills, field)()
 
     diets = bills.belonged_to_diets()
@@ -49,7 +56,7 @@ def extract_diet_number(bill_number):
 
 def calc_last_updated_date(bill):
     last_updated_date = ''
-    for field in DATE_FIELDS:
+    for field in GQL_DATE_FIELDS:
         if getattr(bill, field).formatted:
             last_updated_date = max(last_updated_date, to_date_str(getattr(bill, field)))
     for minutes in bill.be_discussed_by_minutes:
@@ -59,20 +66,20 @@ def calc_last_updated_date(bill):
 
 def build_bill_text(bill: Bill):
     bill_text = BillText(None)
-    bill_text.id = bill.id
-    bill_text.title = bill.name
-    bill_text.category = BillCategory.from_gql(bill).index
+
+    for gql_field, es_field in GQL_ES_FIELD_MAP.items():
+        maybe_value = getattr(bill, gql_field.name, None)
+        if maybe_value:  # ignore None or empty
+            bill_text.set(es_field, maybe_value)
+
+    bill_text.set(BillText.Field.CATEGORY, BillCategory.from_gql(bill))
     if bill.submitted_date.formatted:
-        bill_text.submitted_date = to_date_str(bill.submitted_date)
-        bill_text.last_updated_date = calc_last_updated_date(bill)
-        bill_text.status = BillStatus.from_gql(bill).index
-    if bill.tags:
-        bill_text.tags = bill.tags
-    if bill.aliases:
-        bill_text.aliases = bill.aliases
-    bill_text.submitted_diet = extract_diet_number(bill.bill_number)
+        bill_text.set(BillText.Field.SUBMITTED_DATE, to_date_str(bill.submitted_date))
+        bill_text.set(BillText.Field.LAST_UPDATED_DATE, calc_last_updated_date(bill))
+        bill_text.set(BillText.Field.STATUS, BillStatus.from_gql(bill).index)
+    bill_text.set(BillText.Field.SUBMITTED_DIET, extract_diet_number(bill.bill_number))
     if bill.belonged_to_diets:
-        bill_text.belonged_to_diets = [diet.number for diet in bill.belonged_to_diets]
+        bill_text.set(BillText.Field.BELONGED_TO_DIETS, [diet.number for diet in bill.belonged_to_diets])
     return bill_text
 
 
