@@ -72,7 +72,7 @@ def build_bill_text(bill: Bill):
         if maybe_value:  # ignore None or empty
             bill_text.set(es_field, maybe_value)
 
-    bill_text.set(BillText.Field.CATEGORY, BillCategory.from_gql(bill))
+    bill_text.set(BillText.Field.CATEGORY, BillCategory.from_gql(bill).index)
     if bill.submitted_date.formatted:
         bill_text.set(BillText.Field.SUBMITTED_DATE, to_date_str(bill.submitted_date))
         bill_text.set(BillText.Field.LAST_UPDATED_DATE, calc_last_updated_date(bill))
