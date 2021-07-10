@@ -37,7 +37,7 @@ def get_maybe_summary_pdf(bill):
         if url.title == '概要PDF':
             url_str = url.url
             if 'shugiin.go.jp' in url_str:  # adhoc-fix for requests module failure with HTTP
-                url_str.replace('http://', 'https://')
+                url_str = url_str.replace('http://', 'https://')
             return url_str
     return None
 
