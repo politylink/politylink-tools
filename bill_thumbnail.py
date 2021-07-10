@@ -19,27 +19,26 @@ https://boto3.amazonaws.com/v1/documentation/api/latest/guide/quickstart.html
 """
 
 
-def save_image(data, local_path):
+def save_thumbnail(pdf_path, thumbnail_path):
     """
     https://qiita.com/tomtsutom0122/items/bb5acaee4f4f7820124c
     """
 
-    image = wandImage(blob=data, resolution=300, format="pdf")
-    if len(image.sequence) > 1:
-        # Select the first page of the pdf
-        image = wandImage(image.sequence[0])
+    image = wandImage(filename=f'{pdf_path}[0]', resolution=300, format="pdf")
     image.transform(resize='640')
     image.crop(width=640, height=320)
     image.alpha_channel = 'remove'
-    local_path.parent.mkdir(parents=True, exist_ok=True)
-    image.save(filename=local_path)
+    image.save(filename=thumbnail_path)
     return image.make_blob()
 
 
 def get_maybe_summary_pdf(bill):
     for url in bill.urls:
         if url.title == '概要PDF':
-            return url.url.replace('http://', 'https://')
+            url_str = url.url
+            if 'shugiin.go.jp' in url_str:  # adhoc-fix for requests module failure with HTTP
+                url_str.replace('http://', 'https://')
+            return url_str
     return None
 
 
@@ -57,6 +56,8 @@ def main():
         id_body = bill.id.split(':')[-1]
         local_path = Path(f'./image/bill/{id_body}.png')
         s3_path = Path(f'bill/{id_body}.png')
+        pdf_path = local_path.with_suffix('.pdf')
+        local_path.parent.mkdir(parents=True, exist_ok=True)
 
         if local_path.exists() and not args.overwrite:
             LOGGER.debug(f'{local_path} already exists')
@@ -76,15 +77,17 @@ def main():
             LOGGER.warning(f'failed to fetch {summary_pdf}')
             stats['fail'] += 1
             continue
+        with open(pdf_path, 'wb') as f:
+            f.write(response.content)
+        LOGGER.debug(f'saved {pdf_path}')
 
         try:
-            save_image(response, local_path)
+            save_thumbnail(pdf_path, local_path)
         except Exception:
             LOGGER.exception(f'failed to save {summary_pdf}')
             stats['fail'] += 1
             continue
-        finally:
-            LOGGER.debug(f'saved {local_path}')
+        LOGGER.debug(f'saved {local_path}')
 
         if args.publish:
             s3_client.upload_file(str(local_path), 'politylink', str(s3_path), ExtraArgs={'ContentType': 'image/png'})
