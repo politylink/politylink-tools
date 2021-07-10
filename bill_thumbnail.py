@@ -87,7 +87,7 @@ def main():
             LOGGER.debug(f'saved {local_path}')
 
         if args.publish:
-            s3_client.upload_file(local_path, 'politylink', s3_path, ExtraArgs={'ContentType': 'image/png'})
+            s3_client.upload_file(str(local_path), 'politylink', str(s3_path), ExtraArgs={'ContentType': 'image/png'})
             LOGGER.debug(f'published {s3_path}')
 
     LOGGER.info('processed {} bills ({} success, {} fail)'.format(
