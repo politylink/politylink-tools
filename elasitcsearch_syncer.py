@@ -6,7 +6,7 @@ from sgqlc.operation import Operation
 from tqdm import tqdm
 
 from politylink.elasticsearch.client import ElasticsearchClient, OpType
-from politylink.elasticsearch.schema import BillText, BillCategory, BillStatus
+from politylink.elasticsearch.schema import BillText, BillCategory, BillStatus, ParliamentaryGroup
 from politylink.graphql.client import GraphQLClient, Query
 from politylink.graphql.schema import _BillFilter, Bill
 
@@ -14,7 +14,7 @@ LOGGER = logging.getLogger(__name__)
 gql_client = GraphQLClient(url='https://graphql.politylink.jp')
 es_client = ElasticsearchClient()
 
-GQL_ROOT_FIELDS = ['id', 'name', 'bill_number', 'category', 'aliases', 'tags']
+GQL_ROOT_FIELDS = ['id', 'name', 'bill_number', 'category', 'aliases', 'tags', 'supported_groups', 'opposed_groups']
 GQL_DATE_FIELDS = ['submitted_date', 'passed_representatives_committee_date', 'passed_representatives_date',
                    'passed_councilors_committee_date', 'passed_councilors_date', 'proclaimed_date']
 GQL_ES_FIELD_MAP = {
@@ -38,6 +38,9 @@ def fetch_bill(bill_id):
 
     minutes = bills.be_discussed_by_minutes()
     minutes.start_date_time()
+
+    members = bills.be_submitted_by_members()
+    members.group()
 
     res = gql_client.endpoint(op)
     data = (op + res).bill
@@ -64,6 +67,12 @@ def calc_last_updated_date(bill):
     return last_updated_date
 
 
+def to_es_groups(gql_groups):
+    if not gql_groups:
+        return list()
+    return [ParliamentaryGroup.from_gql(gql_group).index for gql_group in gql_groups if gql_group]
+
+
 def build_bill_text(bill: Bill):
     bill_text = BillText(None)
 
@@ -80,6 +89,16 @@ def build_bill_text(bill: Bill):
     bill_text.set(BillText.Field.SUBMITTED_DIET, extract_diet_number(bill.bill_number))
     if bill.belonged_to_diets:
         bill_text.set(BillText.Field.BELONGED_TO_DIETS, [diet.number for diet in bill.belonged_to_diets])
+
+    field_list = [BillText.Field.SUBMITTED_GROUPS, BillText.Field.SUPPORTED_GROUPS, BillText.Field.OPPOSED_GROUPS]
+    groups_list = [
+        to_es_groups([member.group for member in bill.be_submitted_by_members if member.group]),
+        to_es_groups(bill.supported_groups),
+        to_es_groups(bill.opposed_groups)
+    ]
+    for field, groups in zip(field_list, groups_list):
+        if groups:
+            bill_text.set(field, groups)
     return bill_text
 
 
