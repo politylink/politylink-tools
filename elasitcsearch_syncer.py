@@ -8,14 +8,14 @@ from tqdm import tqdm
 from politylink.elasticsearch.client import ElasticsearchClient, OpType
 from politylink.elasticsearch.schema import BillText, BillCategory, BillStatus, ParliamentaryGroup, MemberText
 from politylink.graphql.client import GraphQLClient, Query
-from politylink.graphql.schema import _BillFilter, Bill, Member
+from politylink.graphql.schema import _BillFilter, Bill, Member, _MemberFilter
 
 LOGGER = logging.getLogger(__name__)
 gql_client = GraphQLClient(url='https://graphql.politylink.jp')
 es_client = ElasticsearchClient()
 
 
-class ElasticSyncer:
+class ElasticsearchSyncer:
     def __init__(self, gql_client: GraphQLClient, es_client: ElasticsearchClient):
         self.gql_client = gql_client
         self.es_client = es_client
@@ -49,7 +49,7 @@ class ElasticSyncer:
         NotImplemented
 
 
-class BillSyncer(ElasticSyncer):
+class BillSyncer(ElasticsearchSyncer):
     GQL_ROOT_FIELDS = ['id', 'name', 'bill_number', 'category', 'aliases', 'tags', 'supported_groups', 'opposed_groups']
     GQL_DATE_FIELDS = ['submitted_date', 'passed_representatives_committee_date', 'passed_representatives_date',
                        'passed_councilors_committee_date', 'passed_councilors_date', 'proclaimed_date']
@@ -119,7 +119,7 @@ class BillSyncer(ElasticSyncer):
         return last_updated_date
 
 
-class MemberSyncer(ElasticSyncer):
+class MemberSyncer(ElasticsearchSyncer):
     GQL_FIELDS = ['id', 'name', 'name_hira', 'group']
     GQL_ES_FIELD_MAP = {
         Member.id: MemberText.Field.ID,
@@ -128,7 +128,19 @@ class MemberSyncer(ElasticSyncer):
     }
 
     def fetch(self, member_id) -> Member:
-        return self.gql_client.get(member_id, fields=self.GQL_FIELDS)
+        op = Operation(Query)
+        members = op.member(filter=_MemberFilter({'id': member_id}))
+
+        for field in self.GQL_FIELDS:
+            getattr(members, field)()
+
+        # TODO: fetch only the latest activity once POL-344 is fixed
+        activities = members.activities()
+        activities.datetime()
+
+        res = self.gql_client.endpoint(op)
+        data = (op + res).member
+        return data[0]
 
     def convert(self, member: Member) -> MemberText:
         member_text = MemberText()
@@ -141,7 +153,15 @@ class MemberSyncer(ElasticSyncer):
         if member.group:
             member_text.set(MemberText.Field.GROUP, ParliamentaryGroup.from_gql(member.group).index)
 
+        if member.activities:
+            member_text.set(MemberText.Field.LAST_UPDATED_DATE, self._calc_last_updated_date(member))
+
         return member_text
+
+    def _calc_last_updated_date(self, member: Member) -> str:
+        if member.activities:
+            return max([to_date_str(activity.datetime) for activity in member.activities])
+        return ''
 
 
 def to_date_str(dt):
