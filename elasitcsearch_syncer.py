@@ -6,7 +6,7 @@ from sgqlc.operation import Operation
 from tqdm import tqdm
 
 from politylink.elasticsearch.client import ElasticsearchClient, OpType
-from politylink.elasticsearch.schema import BillText, BillCategory, BillStatus, ParliamentaryGroup, MemberText
+from politylink.elasticsearch.schema import BillText, BillCategory, BillStatus, ParliamentaryGroup, MemberText, House
 from politylink.graphql.client import GraphQLClient, Query
 from politylink.graphql.schema import _BillFilter, Bill, Member, _MemberFilter
 
@@ -120,7 +120,7 @@ class BillSyncer(ElasticsearchSyncer):
 
 
 class MemberSyncer(ElasticsearchSyncer):
-    GQL_FIELDS = ['id', 'name', 'name_hira', 'group']
+    GQL_FIELDS = ['id', 'name', 'name_hira', 'group', 'house']
     GQL_ES_FIELD_MAP = {
         Member.id: MemberText.Field.ID,
         Member.name: MemberText.Field.NAME,
@@ -152,9 +152,10 @@ class MemberSyncer(ElasticsearchSyncer):
 
         if member.group:
             member_text.set(MemberText.Field.GROUP, ParliamentaryGroup.from_gql(member.group).index)
-
         if member.activities:
             member_text.set(MemberText.Field.LAST_UPDATED_DATE, self._calc_last_updated_date(member))
+        if member.house:
+            member_text.set(MemberText.Field.HOUSE, House.from_gql(member.house).index)
 
         return member_text
 
