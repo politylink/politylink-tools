@@ -8,6 +8,6 @@ poetry run python link.py
 poetry run python link.py --file ./data/unlink.csv --delete
 poetry run python find_news.py -q 国民 -s 2021-04-25 -e 2021-04-26
 poetry run python reindex_news.py -s 2021-01-01 -e 2021-05-01
-poetry run python elasitcsearch_syncer.py --bill --member
+poetry run python elasticsearch_syncer.py --bill --member
 poetry run python bill_thumbnail.py
 ```
