@@ -13,4 +13,5 @@ poetry run python bill_thumbnail.py --publish
 poetry run python diet.py
 poetry run python bill_url.py
 poetry run python member_image.py
+poetry run python reprocess_minutes.py -s 2022-01-01 -e 2022-03-01
 ```
