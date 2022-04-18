@@ -12,4 +12,5 @@ poetry run python elasticsearch_syncer.py --bill --member
 poetry run python bill_thumbnail.py --publish
 poetry run python diet.py
 poetry run python bill_url.py
+poetry run python member_image.py
 ```
