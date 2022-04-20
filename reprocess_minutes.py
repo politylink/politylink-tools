@@ -7,7 +7,6 @@ from tqdm import tqdm
 from politylink.graphql.client import GraphQLClient
 from politylink.graphql.schema import _MinutesFilter, _Neo4jDateTimeInput
 from politylink.helpers import BillFinder
-from politylink.utils.bill import extract_bill_number_or_none, extract_bill_category_or_none
 from utils import date_type
 
 LOGGER = logging.getLogger(__name__)
@@ -22,35 +21,26 @@ def fetch_all_minutes(start_date, end_date):
     filter_ = _MinutesFilter(None)
     filter_.start_date_time_gte = to_neo4j_date(start_date)
     filter_.start_date_time_lt = to_neo4j_date(end_date)
-    return GQL_CLIENT.get_all_minutes(filter_=filter_, fields=['id', 'topics', 'topic_ids'])
+    return GQL_CLIENT.get_all_minutes(filter_=filter_, fields=['id', 'topics', 'topic_ids', 'start_date_time'])
 
 
-def get_topic_id(topic):
+def get_topic_id(topic, date):
     """
-    Copied form SpiderTemplate in niffler-crawler
-    TODO: move this logic to niffler-common
+    Copied from SpiderTemplate in politylink-crawler
     """
-
-    maybe_bill_number = extract_bill_number_or_none(topic)
-    maybe_category = extract_bill_category_or_none(topic)
     try:
-        if maybe_bill_number:
-            bill = BILL_FINDER.find_one(maybe_bill_number)
-        elif maybe_category:
-            bill = BILL_FINDER.find_one(topic, category=maybe_category)
-        else:
-            bill = BILL_FINDER.find_one(topic)
+        bill = BILL_FINDER.find_one(text=topic, date=date)
         return bill.id
     except ValueError as e:
-        LOGGER.debug(e)  # this is expected when topic does not include bill
-    return ''
+        LOGGER.debug(e)
+        return ''
 
 
 def reprocess_minutes(minutes):
     LOGGER.debug(f'process {minutes.id}')
 
     if minutes.topics:
-        topic_ids = list(map(lambda x: get_topic_id(x), minutes.topics))
+        topic_ids = list(map(lambda x: get_topic_id(x, minutes.start_date_time), minutes.topics))
         if topic_ids != minutes.topic_ids:
             LOGGER.debug(f'updated topic ids from {minutes.topic_ids} to {topic_ids}')
             minutes.topic_ids = topic_ids
