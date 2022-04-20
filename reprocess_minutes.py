@@ -5,7 +5,7 @@ from datetime import datetime
 from tqdm import tqdm
 
 from politylink.graphql.client import GraphQLClient
-from politylink.graphql.schema import _MinutesFilter, _Neo4jDateTimeInput
+from politylink.graphql.schema import _MinutesFilter, _Neo4jDateTimeInput, Minutes
 from politylink.helpers import BillFinder
 from utils import date_type
 
@@ -42,9 +42,12 @@ def reprocess_minutes(minutes):
     if minutes.topics:
         topic_ids = list(map(lambda x: get_topic_id(x, minutes.start_date_time), minutes.topics))
         if topic_ids != minutes.topic_ids:
-            LOGGER.debug(f'updated topic ids from {minutes.topic_ids} to {topic_ids}')
-            minutes.topic_ids = topic_ids
+            # need to create new instance to avoid neo4j datetime error
+            updated_minutes = Minutes(None)
+            updated_minutes.id = minutes.id
+            updated_minutes.topic_ids = topic_ids
             GQL_CLIENT.merge(minutes)
+            LOGGER.debug(f'updated topic ids from {minutes.topic_ids} to {topic_ids}')
 
         bill_ids = list(filter(lambda x: x, topic_ids))
         if bill_ids:
