@@ -46,7 +46,7 @@ def reprocess_minutes(minutes):
             updated_minutes = Minutes(None)
             updated_minutes.id = minutes.id
             updated_minutes.topic_ids = topic_ids
-            GQL_CLIENT.merge(minutes)
+            GQL_CLIENT.merge(updated_minutes)
             LOGGER.debug(f'updated topic ids from {minutes.topic_ids} to {topic_ids}')
 
         bill_ids = list(filter(lambda x: x, topic_ids))
