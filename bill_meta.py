@@ -4,6 +4,7 @@ import logging
 import pandas as pd
 
 from politylink.graphql.client import GraphQLClient
+from politylink.graphql.schema import Bill
 from politylink.helpers import BillFinder
 
 LOGGER = logging.getLogger(__name__)
@@ -31,9 +32,7 @@ def main(fp):
                 aliases.append(row['value'])
         LOGGER.debug(f'found {len(tags)} tags and {len(aliases)} aliases for {bill.bill_number}')
 
-        bill.tags = tags
-        bill.aliases = aliases
-        bills.append(bill)
+        bills.append(Bill({'id': bill.id, 'tags': tags, 'aliases': aliases}))
 
     client.bulk_merge(bills)
     LOGGER.info(f'merged {len(bills)} bills')
