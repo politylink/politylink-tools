@@ -52,6 +52,8 @@ def main():
     stats = defaultdict(int)
     for bill in tqdm(bills):
         LOGGER.debug(f'check {bill.id}')
+        if bill.id in ['Bill:bbPoZw2urVnHTTlaaQoJ0w', 'Bill:f8x2G9CNRnIQptRJFCNZ2A']:
+            continue
 
         id_body = bill.id.split(':')[-1]
         local_path = Path(f'./image/bill/{id_body}.png')
